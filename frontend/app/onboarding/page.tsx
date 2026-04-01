@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { artisanApi } from "@/lib/api";
 import { Bot, ChevronRight, ChevronLeft, Check } from "lucide-react";
 
@@ -9,6 +10,7 @@ const STEPS = ["Identité", "Tarifs & Zone", "Ton du bot", "Connexion Gmail"];
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -32,6 +34,7 @@ export default function OnboardingPage() {
       const artisan = await artisanApi.create({
         name: form.name,
         email: form.email,
+        clerk_user_id: user?.id,
         config_json: {
           metier: form.metier,
           ville: form.ville,
@@ -43,7 +46,6 @@ export default function OnboardingPage() {
           tarifs: form.tarifs_note ? { note: form.tarifs_note } : {},
         },
       });
-      // Stocker l'ID artisan (en prod, géré via Clerk)
       localStorage.setItem("artisan_id", artisan.id);
       router.push("/settings?onboarding=done");
     } catch (e: any) {

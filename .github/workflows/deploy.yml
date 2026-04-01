@@ -1,0 +1,38 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            set -e
+
+            cd ~/artibot
+
+            # Pull dernière version du code
+            git pull origin main
+
+            # Rebuild et redémarrer les containers
+            docker compose up -d --build --remove-orphans
+
+            # Appliquer la migration clerk_user_id (idempotent)
+            docker compose exec -T db psql -U artibot -d artibot -c "
+              ALTER TABLE artisans ADD COLUMN IF NOT EXISTS clerk_user_id VARCHAR(255) UNIQUE;
+              CREATE INDEX IF NOT EXISTS idx_artisans_clerk_user_id ON artisans (clerk_user_id);
+            "
+
+            # Nettoyage des images inutilisées
+            docker image prune -f
+
+            echo "✅ Déploiement terminé"

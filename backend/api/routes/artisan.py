@@ -29,6 +29,7 @@ class ArtisanCreate(BaseModel):
     name: str
     email: str
     config_json: dict = {}
+    clerk_user_id: Optional[str] = None
 
 
 class ArtisanUpdate(BaseModel):
@@ -51,10 +52,19 @@ def create_artisan(payload: ArtisanCreate, db: Session = Depends(get_db)):
         name=payload.name,
         email=payload.email,
         config_json=payload.config_json,
+        clerk_user_id=payload.clerk_user_id,
     )
     db.add(artisan)
     db.commit()
     db.refresh(artisan)
+    return _artisan_to_dict(artisan)
+
+
+@router.get("/by-clerk/{clerk_user_id}")
+def get_artisan_by_clerk(clerk_user_id: str, db: Session = Depends(get_db)):
+    artisan = db.query(Artisan).filter(Artisan.clerk_user_id == clerk_user_id).first()
+    if not artisan:
+        raise HTTPException(status_code=404, detail="Artisan non trouvé")
     return _artisan_to_dict(artisan)
 
 

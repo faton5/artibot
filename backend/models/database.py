@@ -14,6 +14,7 @@ class Artisan(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
+    clerk_user_id = Column(String(255), nullable=True, unique=True, index=True)
     config_json = Column(JSONB, default={})
     gmail_token_encrypted = Column(Text, nullable=True)
     twilio_number = Column(String(20), nullable=True)

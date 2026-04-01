@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Navbar } from "@/components/Navbar";
+import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
 import { artisanApi } from "@/lib/api";
 import { CheckCircle, XCircle, ExternalLink, Save } from "lucide-react";
 import type { ArtisanConfig } from "@/types";
 
-const ARTISAN_ID = process.env.NEXT_PUBLIC_ARTISAN_ID || "";
-
 export default function SettingsPage() {
+  const { artisanId, isLoading: artisanLoading } = useCurrentArtisan();
+
   const { data: artisan, isLoading, mutate } = useSWR(
-    ["artisan", ARTISAN_ID],
-    () => artisanApi.get(ARTISAN_ID),
+    artisanId ? ["artisan", artisanId] : null,
+    () => artisanApi.get(artisanId as string),
     { revalidateOnFocus: false }
   );
 
@@ -28,9 +29,10 @@ export default function SettingsPage() {
   }, [artisan]);
 
   const handleSave = async () => {
+    if (!artisanId) return;
     setSaving(true);
     try {
-      await artisanApi.update(ARTISAN_ID, { config_json: config });
+      await artisanApi.update(artisanId, { config_json: config });
       await mutate();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -42,8 +44,9 @@ export default function SettingsPage() {
   };
 
   const handleConnectGmail = async () => {
+    if (!artisanId) return;
     try {
-      const { auth_url } = await artisanApi.connectGmail(ARTISAN_ID);
+      const { auth_url } = await artisanApi.connectGmail(artisanId);
       window.location.href = auth_url;
     } catch (e: any) {
       alert(e.message);
@@ -51,9 +54,10 @@ export default function SettingsPage() {
   };
 
   const handleDisconnectGmail = async () => {
+    if (!artisanId) return;
     if (!confirm("Déconnecter Gmail ? Le bot ne pourra plus répondre aux emails.")) return;
     try {
-      await artisanApi.disconnectGmail(ARTISAN_ID);
+      await artisanApi.disconnectGmail(artisanId);
       await mutate();
     } catch (e: any) {
       alert(e.message);
@@ -74,7 +78,7 @@ export default function SettingsPage() {
             <p className="text-gray-500 text-sm">Configuration de votre assistant ArtiBot</p>
           </div>
 
-          {isLoading ? (
+          {artisanLoading || isLoading ? (
             <div className="flex justify-center py-10">
               <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </div>

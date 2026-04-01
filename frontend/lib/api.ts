@@ -19,7 +19,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 export const artisanApi = {
   get: (id: string) => apiFetch<Artisan>(`/api/artisans/${id}`),
 
-  create: (data: { name: string; email: string; config_json?: ArtisanConfig }) =>
+  getByClerkId: (clerkUserId: string) =>
+    apiFetch<Artisan>(`/api/artisans/by-clerk/${clerkUserId}`),
+
+  create: (data: { name: string; email: string; config_json?: ArtisanConfig; clerk_user_id?: string }) =>
     apiFetch<Artisan>("/api/artisans", { method: "POST", body: JSON.stringify(data) }),
 
   update: (id: string, data: { name?: string; config_json?: ArtisanConfig }) =>

@@ -3,13 +3,13 @@
 import { useState, useRef } from "react";
 import useSWR from "swr";
 import { Navbar } from "@/components/Navbar";
+import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
 import { knowledgeApi } from "@/lib/api";
 import { Upload, Plus, Trash2, FileText, HelpCircle, X } from "lucide-react";
 import type { KnowledgeChunk } from "@/types";
 
-const ARTISAN_ID = process.env.NEXT_PUBLIC_ARTISAN_ID || "";
-
 export default function KnowledgePage() {
+  const { artisanId } = useCurrentArtisan();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showQAForm, setShowQAForm] = useState(false);
@@ -18,18 +18,18 @@ export default function KnowledgePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: chunks = [], isLoading, mutate } = useSWR(
-    ["knowledge", ARTISAN_ID],
-    () => knowledgeApi.list(ARTISAN_ID),
+    artisanId ? ["knowledge", artisanId] : null,
+    () => knowledgeApi.list(artisanId as string),
     { revalidateOnFocus: false }
   );
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !artisanId) return;
     setUploading(true);
     setUploadError(null);
     try {
-      const result = await knowledgeApi.uploadPDF(ARTISAN_ID, file);
+      const result = await knowledgeApi.uploadPDF(artisanId, file);
       await mutate();
       alert(`${result.chunks_created} chunks indexés depuis ${result.filename}`);
     } catch (err: any) {
@@ -41,10 +41,10 @@ export default function KnowledgePage() {
   };
 
   const handleAddQA = async () => {
-    if (!qa.question.trim() || !qa.answer.trim()) return;
+    if (!qa.question.trim() || !qa.answer.trim() || !artisanId) return;
     setSavingQA(true);
     try {
-      await knowledgeApi.addQA(ARTISAN_ID, qa.question, qa.answer);
+      await knowledgeApi.addQA(artisanId, qa.question, qa.answer);
       setQA({ question: "", answer: "" });
       setShowQAForm(false);
       await mutate();
@@ -56,9 +56,9 @@ export default function KnowledgePage() {
   };
 
   const handleDelete = async (chunkId: string) => {
-    if (!confirm("Supprimer ce chunk ?")) return;
+    if (!artisanId || !confirm("Supprimer ce chunk ?")) return;
     try {
-      await knowledgeApi.deleteChunk(ARTISAN_ID, chunkId);
+      await knowledgeApi.deleteChunk(artisanId, chunkId);
       await mutate();
     } catch (err: any) {
       alert(err.message);

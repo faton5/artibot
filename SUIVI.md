@@ -1,6 +1,6 @@
 # ArtiBot — Suivi du projet
 
-> Dernière mise à jour : 2026-04-01 (session 2)
+> Dernière mise à jour : 2026-04-01 (session 3)
 > Version CDC : 2.0 — Mars 2026
 
 ---
@@ -112,8 +112,10 @@
 | Page `/sign-up` Clerk | ✅ |
 | `middleware.ts` (routes protégées) | ✅ |
 | Dashboard visible et fonctionnel en local | ✅ |
-| **Installer composants shadcn/ui** | ⏳ |
-| **Lier ARTISAN_ID à l'utilisateur Clerk** | ⏳ |
+| **Installer composants shadcn/ui** | ✅ |
+| **Lier ARTISAN_ID à l'utilisateur Clerk** | ✅ |
+| **Hook `useCurrentArtisan` + route `/by-clerk`** | ✅ |
+| **Migration `002_add_clerk_user_id.sql`** | ✅ |
 
 ---
 
@@ -141,8 +143,8 @@
 | `.env.example` documenté | ✅ |
 | `.env` créé et rempli | ✅ |
 | Docker lancé en local (db + backend) | ✅ |
-| **Provisionner VPS** (Ubuntu 22+, Docker) | ⏳ |
-| **Configurer DNS** (A record → IP VPS) | ⏳ |
+| **Provisionner VPS** (serveur perso + Docker) | ⏳ |
+| **Configurer DNS** (sous-domaine perso → IP serveur) | ⏳ |
 | **Certificats SSL** Let's Encrypt | ⏳ |
 | **Déployer sur VPS** | ⏳ |
 | **Tester avec 3-5 artisans pilotes** | ⏳ |
@@ -162,9 +164,9 @@
 | 0 — Fondations | ✅ Fonctionnel | — |
 | 1 — Moteur IA | ✅ Testé et validé | Affiner prompt |
 | 2 — Canal Email | 🔧 OAuth OK, Pub/Sub en attente | URL publique (VPS/ngrok) |
-| 3 — Interface Admin | ✅ Fonctionnel en local | shadcn/ui + lier Clerk |
-| 4 — SMS Twilio | 🔧 Compte OK, numéro en attente | URL publique (VPS/ngrok) |
-| 5 — Déploiement | 🔧 Docker OK en local | VPS + DNS + SSL |
+| 3 — Interface Admin | ✅ Complet | — |
+| 4 — SMS Twilio | 🔧 Compte OK, numéro en attente | URL publique (serveur perso) |
+| 5 — Déploiement | 🔧 Docker OK en local | Serveur perso + DNS + SSL |
 | 6 — Widget Web | ❌ | — |
 | 7 — WhatsApp | ❌ | — |
 
