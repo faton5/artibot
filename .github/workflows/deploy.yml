@@ -18,10 +18,16 @@ jobs:
           script: |
             set -e
 
-            cd ~/artibot
+            APP_DIR="$HOME/artibot"
 
-            # Pull dernière version du code
-            git pull origin main
+            # Clone automatique si premier déploiement
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone https://github.com/faton5/artibot.git "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
 
             # Rebuild et redémarrer les containers
             docker compose up -d --build --remove-orphans
