@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { headers } from "next/headers";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +9,9 @@ export const metadata: Metadata = {
   description: "Gérez vos prospects automatiquement avec l'IA",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider nonce={nonce} dynamic>
+    <ClerkProvider>
       <html lang="fr">
         <body className="bg-gray-50 text-gray-900 antialiased">{children}</body>
       </html>
