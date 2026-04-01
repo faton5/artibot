@@ -21,6 +21,10 @@ class Settings(BaseSettings):
 
     # Resend (transactional email)
     RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
+
+    # URL publique de l'app (pour les webhooks Twilio)
+    APP_BASE_URL: str = "http://localhost:8000"
 
     # Clerk
     CLERK_SECRET_KEY: str = ""

@@ -63,6 +63,6 @@ class SMSChannel(BaseChannel):
 
         purchased = client.incoming_phone_numbers.create(
             phone_number=available[0].phone_number,
-            sms_url="https://api.artibot.fr/api/webhook/sms",
+            sms_url=f"{settings.APP_BASE_URL}/api/webhook/sms",
         )
         return purchased.phone_number

@@ -14,7 +14,7 @@ class EmailService:
 
     def __init__(self):
         resend.api_key = settings.RESEND_API_KEY
-        self.from_email = "rapports@artibot.fr"
+        self.from_email = settings.RESEND_FROM_EMAIL
         self.from_name = "ArtiBot — Rapports"
 
     async def send_qualification_report(
