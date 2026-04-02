@@ -9,11 +9,13 @@ CREATE TABLE IF NOT EXISTS artisans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    clerk_user_id VARCHAR(255) UNIQUE,
     config_json JSONB DEFAULT '{}',
     gmail_token_encrypted TEXT,
     twilio_number VARCHAR(20),
     created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS idx_artisans_clerk_user_id ON artisans (clerk_user_id);
 
 -- Table knowledge_chunks (RAG)
 CREATE TABLE IF NOT EXISTS knowledge_chunks (

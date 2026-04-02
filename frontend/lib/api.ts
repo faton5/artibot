@@ -1,6 +1,15 @@
-import type { Artisan, ArtisanConfig, Conversation, KnowledgeChunk, Rapport } from "@/types";
+import type {
+  Artisan, ArtisanConfig, CitySuggestion, Conversation,
+  KnowledgeChunk, Rapport, ProspectWithConversation,
+  RapportWithMeta, ReadinessStatus,
+} from "@/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// In the browser use relative URLs so Next.js rewrites proxy to the backend.
+// On the server (SSR) use the full internal URL.
+const API_BASE =
+  typeof window === "undefined"
+    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000")
+    : "";
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -75,7 +84,8 @@ export const knowledgeApi = {
   uploadPDF: async (artisanId: string, file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch(`${API_BASE}/api/artisans/${artisanId}/knowledge/upload`, {
+    const base = typeof window === "undefined" ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") : "";
+    const res = await fetch(`${base}/api/artisans/${artisanId}/knowledge/upload`, {
       method: "POST",
       body: formData,
     });
@@ -93,4 +103,32 @@ export const knowledgeApi = {
     apiFetch<{ status: string }>(`/api/artisans/${artisanId}/knowledge/${chunkId}`, {
       method: "DELETE",
     }),
+};
+
+// ── Prospects ─────────────────────────────────────────────────────────────────
+
+export const prospectApi = {
+  list: (artisanId: string) =>
+    apiFetch<ProspectWithConversation[]>(`/api/artisans/${artisanId}/prospects`),
+};
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+
+export const reportApi = {
+  list: (artisanId: string) =>
+    apiFetch<RapportWithMeta[]>(`/api/artisans/${artisanId}/reports`),
+};
+
+// ── Readiness ─────────────────────────────────────────────────────────────────
+
+export const readinessApi = {
+  get: (artisanId: string) =>
+    apiFetch<ReadinessStatus>(`/api/artisans/${artisanId}/readiness`),
+};
+
+// ── Geo ───────────────────────────────────────────────────────────────────────
+
+export const geoApi = {
+  searchCities: (query: string, limit = 8) =>
+    apiFetch<CitySuggestion[]>(`/api/geo/cities?q=${encodeURIComponent(query)}&limit=${limit}`),
 };

@@ -31,6 +31,17 @@
 
 ---
 
+## Alignement avec les CDC
+
+Le suivi est **globalement aligné avec le CDC technique 2.0**, avec quelques arbitrages produit/tech assumés pour le MVP :
+
+- **LLM / embeddings** : le CDC technique cible Claude + Voyage/OpenAI embeddings ; l'implémentation actuelle du MVP utilise **OpenAI GPT-4o / GPT-4o-mini** et `text-embedding-3-small`, principalement pour des raisons de coût et de simplicité d'itération.
+- **Canal de départ** : le CDC produit non-tech met surtout en avant **WhatsApp + widget web** ; le projet actuel suit un **MVP email d'abord**, puis SMS, puis widget web, puis WhatsApp.
+- **Temps réel dashboard** : le CDC technique mentionne `socket.io-client` en option ; l'implémentation actuelle utilise du **polling SWR**.
+- **Fonctions encore absentes malgré présence dans les CDC** : rétention configurable des conversations (90 jours), suggestions automatiques de Q&A depuis les conversations, KPI "chantiers conclus", landing page marketing, WhatsApp et widget web.
+
+---
+
 ## Phase 0 — Fondations
 
 | Tâche | Statut |
@@ -61,7 +72,7 @@
 | Logique qualification (Condition A + B) | ✅ |
 | Scoring cold/warm/hot | ✅ |
 | Merge données prospect | ✅ |
-| **Tests unitaires** | ⏳ |
+| **Tests unitaires** | ✅ |
 | **Affiner prompt avec artisans pilotes** | ⏳ |
 
 ---
@@ -114,8 +125,6 @@
 | Dashboard visible et fonctionnel en local | ✅ |
 | **Installer composants shadcn/ui** | ✅ |
 | **Lier ARTISAN_ID à l'utilisateur Clerk** | ✅ |
-| **Hook `useCurrentArtisan` + route `/by-clerk`** | ✅ |
-| **Migration `002_add_clerk_user_id.sql`** | ✅ |
 
 ---
 
@@ -143,8 +152,8 @@
 | `.env.example` documenté | ✅ |
 | `.env` créé et rempli | ✅ |
 | Docker lancé en local (db + backend) | ✅ |
-| **Provisionner VPS** (serveur perso + Docker) | ⏳ |
-| **Configurer DNS** (sous-domaine perso → IP serveur) | ⏳ |
+| **Provisionner VPS** (Ubuntu 22+, Docker) | ⏳ |
+| **Configurer DNS** (A record → IP VPS) | ⏳ |
 | **Certificats SSL** Let's Encrypt | ⏳ |
 | **Déployer sur VPS** | ⏳ |
 | **Tester avec 3-5 artisans pilotes** | ⏳ |
@@ -164,9 +173,9 @@
 | 0 — Fondations | ✅ Fonctionnel | — |
 | 1 — Moteur IA | ✅ Testé et validé | Affiner prompt |
 | 2 — Canal Email | 🔧 OAuth OK, Pub/Sub en attente | URL publique (VPS/ngrok) |
-| 3 — Interface Admin | ✅ Complet | — |
-| 4 — SMS Twilio | 🔧 Compte OK, numéro en attente | URL publique (serveur perso) |
-| 5 — Déploiement | 🔧 Docker OK en local | Serveur perso + DNS + SSL |
+| 3 — Interface Admin | ✅ Fonctionnel en local | — |
+| 4 — SMS Twilio | 🔧 Compte OK, numéro en attente | URL publique (VPS/ngrok) |
+| 5 — Déploiement | 🔧 Docker OK en local | VPS + DNS + SSL |
 | 6 — Widget Web | ❌ | — |
 | 7 — WhatsApp | ❌ | — |
 

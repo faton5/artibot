@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import useSWR from "swr";
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
 import { artisanApi } from "@/lib/api";
-import { CheckCircle, XCircle, ExternalLink, Save } from "lucide-react";
+import { CheckCircle, Save, User, Settings2, Plug } from "lucide-react";
 import type { ArtisanConfig } from "@/types";
 
 export default function SettingsPage() {
@@ -21,7 +22,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Initialise le formulaire quand les données arrivent
   useEffect(() => {
     if (artisan?.config_json && Object.keys(config).length === 0) {
       setConfig(artisan.config_json);
@@ -43,27 +43,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleConnectGmail = async () => {
-    if (!artisanId) return;
-    try {
-      const { auth_url } = await artisanApi.connectGmail(artisanId);
-      window.location.href = auth_url;
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
-  const handleDisconnectGmail = async () => {
-    if (!artisanId) return;
-    if (!confirm("Déconnecter Gmail ? Le bot ne pourra plus répondre aux emails.")) return;
-    try {
-      await artisanApi.disconnectGmail(artisanId);
-      await mutate();
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
   const update = (key: keyof ArtisanConfig, value: string | number) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
@@ -71,205 +50,128 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
-      <main className="ml-60 flex-1 overflow-y-auto p-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Paramètres</h1>
-            <p className="text-gray-500 text-sm">Configuration de votre assistant ArtiBot</p>
-          </div>
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{ marginLeft: "var(--sidebar-w)", background: "var(--canvas)" }}
+      >
+        <div
+          className="px-8 py-6"
+          style={{ background: "var(--surface)", borderBottom: "1px solid var(--forge-100)" }}
+        >
+          <h1 className="text-[20px] font-display" style={{ fontWeight: 800, color: "var(--forge-900)" }}>
+            Paramètres
+          </h1>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--forge-400)" }}>
+            Profil et configuration de votre assistant
+          </p>
+        </div>
 
+        <div className="px-8 py-7 max-w-3xl mx-auto space-y-5">
           {artisanLoading || isLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="space-y-4">
+              {[1,2,3].map((i) => (
+                <div key={i} className="h-32 rounded-2xl animate-pulse" style={{ background: "var(--forge-100)" }} />
+              ))}
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Section Gmail */}
-              <section className="bg-white border border-gray-200 rounded-xl p-5">
-                <h2 className="font-semibold text-gray-900 mb-4">Connexion Gmail</h2>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {artisan?.gmail_connected ? (
-                      <>
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Gmail connecté</p>
-                          <p className="text-xs text-gray-500">{artisan.email}</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-5 h-5 text-gray-300" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Gmail non connecté</p>
-                          <p className="text-xs text-gray-500">Connectez Gmail pour recevoir et répondre aux emails automatiquement</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  {artisan?.gmail_connected ? (
-                    <button
-                      onClick={handleDisconnectGmail}
-                      className="px-3 py-1.5 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      Déconnecter
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleConnectGmail}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      Connecter Gmail
-                    </button>
-                  )}
-                </div>
-              </section>
-
-              {/* Section Twilio */}
-              <section className="bg-white border border-gray-200 rounded-xl p-5">
-                <h2 className="font-semibold text-gray-900 mb-4">Numéro SMS (Twilio)</h2>
+            <>
+              <Link
+                href="/integrations"
+                className="flex items-center justify-between p-4 rounded-xl transition-colors"
+                style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#ffedd5")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#fff7ed")}
+              >
                 <div className="flex items-center gap-3">
-                  {artisan?.twilio_number ? (
-                    <>
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Numéro attribué</p>
-                        <p className="text-xs text-gray-500 font-mono">{artisan.twilio_number}</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="w-5 h-5 text-gray-300" />
-                      <p className="text-sm text-gray-500">Aucun numéro SMS configuré</p>
-                    </>
-                  )}
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#ffedd5" }}>
+                    <Plug className="w-4 h-4" style={{ color: "#ea580c" }} />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold" style={{ color: "#9a3412" }}>Canaux de communication</p>
+                    <p className="text-[11px]" style={{ color: "#c2410c" }}>Gmail, SMS, WhatsApp — gérer dans Intégrations</p>
+                  </div>
                 </div>
-              </section>
+                <span className="text-[12px] font-medium" style={{ color: "#ea580c" }}>Ouvrir →</span>
+              </Link>
 
-              {/* Section Config bot */}
-              <section className="bg-white border border-gray-200 rounded-xl p-5">
-                <h2 className="font-semibold text-gray-900 mb-4">Configuration du bot</h2>
-                <div className="space-y-4">
-                  <Field label="Métier" placeholder="Ex: peintre en bâtiment">
-                    <input
-                      type="text"
-                      value={config.metier ?? ""}
-                      onChange={(e) => update("metier", e.target.value)}
-                      placeholder="peintre en bâtiment"
-                      className="field-input"
-                    />
+              <Section icon={<User className="w-4 h-4" />} title="Compte" description="Informations du profil">
+                <Field label="Nom" htmlFor="name">
+                  <input id="name" value={artisan?.name ?? ""} disabled className="forge-input opacity-60" />
+                </Field>
+                <Field label="Email" htmlFor="email" className="mt-4">
+                  <input id="email" value={artisan?.email ?? ""} disabled className="forge-input opacity-60" />
+                  <p className="text-[11px] mt-1" style={{ color: "var(--forge-400)" }}>Modifiable via votre profil Clerk.</p>
+                </Field>
+              </Section>
+
+              <Section icon={<Settings2 className="w-4 h-4" />} title="Configuration du bot" description="Contexte métier et règles de qualification">
+                <Field label="Métier" htmlFor="metier">
+                  <input id="metier" value={config.metier ?? ""} onChange={(e) => update("metier", e.target.value)} placeholder="peintre en bâtiment" className="forge-input" />
+                </Field>
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <Field label="Ville" htmlFor="ville">
+                    <input id="ville" value={config.ville ?? ""} onChange={(e) => update("ville", e.target.value)} placeholder="Rennes" className="forge-input" />
                   </Field>
-
-                  <Field label="Ville" placeholder="Ex: Rennes">
-                    <input
-                      type="text"
-                      value={config.ville ?? ""}
-                      onChange={(e) => update("ville", e.target.value)}
-                      placeholder="Rennes"
-                      className="field-input"
-                    />
-                  </Field>
-
-                  <Field label="Zone d'intervention">
-                    <input
-                      type="text"
-                      value={config.zone ?? ""}
-                      onChange={(e) => update("zone", e.target.value)}
-                      placeholder="Rennes et 30km alentour"
-                      className="field-input"
-                    />
-                  </Field>
-
-                  <Field label="Délais habituels">
-                    <input
-                      type="text"
-                      value={config.delais ?? ""}
-                      onChange={(e) => update("delais", e.target.value)}
-                      placeholder="3 à 5 semaines selon disponibilité"
-                      className="field-input"
-                    />
-                  </Field>
-
-                  <Field label="Ton du bot">
-                    <select
-                      value={config.ton ?? "professionnel et chaleureux"}
-                      onChange={(e) => update("ton", e.target.value)}
-                      className="field-input"
-                    >
-                      <option value="professionnel et chaleureux">Professionnel et chaleureux</option>
-                      <option value="professionnel">Professionnel</option>
-                      <option value="chaleureux et décontracté">Chaleureux et décontracté</option>
-                      <option value="neutre">Neutre</option>
-                    </select>
-                  </Field>
-
-                  <Field label="Message d'accueil">
-                    <textarea
-                      value={config.message_accueil ?? ""}
-                      onChange={(e) => update("message_accueil", e.target.value)}
-                      placeholder="Bonjour ! Je suis l'assistant de Jean-Pierre..."
-                      className="field-input min-h-[80px] resize-none"
-                    />
-                  </Field>
-
-                  <Field label="Seuil de qualification (nb messages)">
-                    <input
-                      type="number"
-                      min={3}
-                      max={15}
-                      value={config.message_threshold ?? 6}
-                      onChange={(e) => update("message_threshold", parseInt(e.target.value))}
-                      className="field-input w-24"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Nombre de messages échangés avant envoi automatique du rapport (5 à 10 recommandé)
-                    </p>
+                  <Field label="Zone" htmlFor="zone">
+                    <input id="zone" value={config.zone ?? ""} onChange={(e) => update("zone", e.target.value)} placeholder="Rennes et 30km" className="forge-input" />
                   </Field>
                 </div>
-
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="mt-5 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  {saving ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : saved ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {saved ? "Enregistré !" : saving ? "Enregistrement..." : "Enregistrer"}
-                </button>
-              </section>
-            </div>
+                <Field label="Délais" htmlFor="delais" className="mt-4">
+                  <input id="delais" value={config.delais ?? ""} onChange={(e) => update("delais", e.target.value)} placeholder="3 à 5 semaines" className="forge-input" />
+                </Field>
+                <Field label="Ton du bot" htmlFor="ton" className="mt-4">
+                  <select id="ton" value={config.ton ?? "professionnel et chaleureux"} onChange={(e) => update("ton", e.target.value)} className="forge-input cursor-pointer">
+                    <option value="professionnel et chaleureux">Professionnel et chaleureux</option>
+                    <option value="professionnel">Professionnel</option>
+                    <option value="chaleureux et décontracté">Chaleureux et décontracté</option>
+                    <option value="neutre">Neutre</option>
+                  </select>
+                </Field>
+                <Field label="Message d'accueil" htmlFor="accueil" className="mt-4">
+                  <textarea id="accueil" value={config.message_accueil ?? ""} onChange={(e) => update("message_accueil", e.target.value)} placeholder="Bonjour ! Je suis l'assistant de…" className="forge-input resize-none" style={{ height: "88px", paddingTop: "10px" }} />
+                </Field>
+                <Field label="Seuil de qualification (messages)" htmlFor="threshold" className="mt-4">
+                  <div className="flex items-center gap-3">
+                    <input id="threshold" type="number" min={3} max={15} value={config.message_threshold ?? 6} onChange={(e) => update("message_threshold", parseInt(e.target.value, 10))} className="forge-input w-24" />
+                    <p className="text-[12px]" style={{ color: "var(--forge-400)" }}>messages avant envoi du rapport</p>
+                  </div>
+                </Field>
+                <div className="mt-6 pt-5" style={{ borderTop: "1px solid var(--forge-100)" }}>
+                  <button onClick={handleSave} disabled={saving} className="btn-primary" style={saved ? { background: "#16a34a", borderColor: "#16a34a" } : {}}>
+                    {saving ? <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent" style={{ animation: "spin 0.7s linear infinite" }} /> : saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                    {saved ? "Enregistré !" : saving ? "Enregistrement…" : "Enregistrer"}
+                  </button>
+                </div>
+              </Section>
+            </>
           )}
         </div>
       </main>
-
-      <style jsx global>{`
-        .field-input {
-          width: 100%;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-          transition: box-shadow 0.15s;
-        }
-        .field-input:focus {
-          box-shadow: 0 0 0 2px #3b82f6;
-        }
-      `}</style>
     </div>
   );
 }
 
-function Field({ label, children, placeholder }: { label: string; children: React.ReactNode; placeholder?: string }) {
+function Section({ icon, title, description, children }: { icon: ReactNode; title: string; description: string; children: ReactNode }) {
   return (
-    <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1.5">{label}</label>
+    <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--forge-100)" }}>
+      <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: "1px solid var(--forge-100)" }}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--forge-50)" }}>
+          <span style={{ color: "var(--forge-700)" }}>{icon}</span>
+        </div>
+        <div>
+          <h2 className="text-[14px] font-display" style={{ fontWeight: 700, color: "var(--forge-900)" }}>{title}</h2>
+          <p className="text-[12px]" style={{ color: "var(--forge-400)" }}>{description}</p>
+        </div>
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, htmlFor, children, className = "" }: { label: string; htmlFor: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={`space-y-1.5 ${className}`}>
+      <label htmlFor={htmlFor} className="block text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--forge-500)" }}>{label}</label>
       {children}
     </div>
   );

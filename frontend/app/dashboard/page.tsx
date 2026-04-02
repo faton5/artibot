@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import useSWR from "swr";
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { ConversationList } from "@/components/ConversationList";
 import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
-import { conversationApi } from "@/lib/api";
-import { Search } from "lucide-react";
+import { conversationApi, readinessApi } from "@/lib/api";
+import { Search, Circle, ChevronRight } from "lucide-react";
 import type { ConversationStatus } from "@/types";
 
 const STATUS_FILTERS: { label: string; value: ConversationStatus | "" }[] = [
@@ -18,35 +19,19 @@ const STATUS_FILTERS: { label: string; value: ConversationStatus | "" }[] = [
 ];
 
 const KPI_CONFIG = [
-  {
-    key: "total",
-    label: "Conversations",
-    accent: "#6366f1",
-    lightBg: "#eef2ff",
-    emoji: "💬",
-  },
-  {
-    key: "active",
-    label: "En cours",
-    accent: "#0ea5e9",
-    lightBg: "#e0f2fe",
-    emoji: "⚡",
-  },
-  {
-    key: "qualified",
-    label: "Qualifiées",
-    accent: "#16a34a",
-    lightBg: "#dcfce7",
-    emoji: "✅",
-  },
-  {
-    key: "hot",
-    label: "Chauds 🔥",
-    accent: "#dc2626",
-    lightBg: "#fee2e2",
-    emoji: "",
-  },
+  { key: "total",     label: "Conversations", accent: "#6366f1", bg: "#eef2ff", emoji: "💬" },
+  { key: "active",    label: "En cours",      accent: "#0ea5e9", bg: "#e0f2fe", emoji: "⚡" },
+  { key: "qualified", label: "Qualifiées",    accent: "#16a34a", bg: "#dcfce7", emoji: "✅" },
+  { key: "hot",       label: "Chauds",        accent: "#dc2626", bg: "#fee2e2", emoji: "🔥" },
 ];
+
+const READINESS_STEPS = [
+  { key: "gmail_connected",      label: "Gmail",             href: "/integrations" },
+  { key: "knowledge_ready",      label: "Base connaissance", href: "/knowledge" },
+  { key: "bot_config_ready",     label: "Config bot",        href: "/settings" },
+  { key: "welcome_message_ready",label: "Message d'accueil", href: "/settings" },
+  { key: "has_test_conversation",label: "Test conversation", href: null },
+] as const;
 
 export default function DashboardPage() {
   const { artisanId, isLoading: artisanLoading } = useCurrentArtisan();
@@ -57,6 +42,12 @@ export default function DashboardPage() {
     artisanId ? ["conversations", artisanId, statusFilter] : null,
     () => conversationApi.list(artisanId as string, statusFilter || undefined),
     { refreshInterval: 5000 }
+  );
+
+  const { data: readiness } = useSWR(
+    artisanId ? ["readiness", artisanId] : null,
+    () => readinessApi.get(artisanId as string),
+    { revalidateOnFocus: false }
   );
 
   const filtered = search.trim()
@@ -72,13 +63,14 @@ export default function DashboardPage() {
     : conversations;
 
   const kpiValues: Record<string, number> = {
-    total: conversations.length,
-    active: conversations.filter((c) => c.status === "active").length,
+    total:     conversations.length,
+    active:    conversations.filter((c) => c.status === "active").length,
     qualified: conversations.filter((c) => c.status === "qualified").length,
-    hot: conversations.filter((c) => c.prospect?.score === "hot").length,
+    hot:       conversations.filter((c) => c.prospect?.score === "hot").length,
   };
 
   const showKPIs = !artisanLoading && !isLoading;
+  const showChecklist = readiness && readiness.completed_steps < readiness.total_steps;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -86,63 +78,116 @@ export default function DashboardPage() {
 
       <main
         className="flex-1 flex flex-col min-w-0"
-        style={{ marginLeft: "var(--sidebar-w)", background: "#f8f8fb" }}
+        style={{ marginLeft: "var(--sidebar-w)", background: "var(--canvas)" }}
       >
-        {/* ── KPI strip ── */}
+        {/* Header + KPIs */}
         <div
-          className="px-6 pt-5 pb-0"
-          style={{ background: "#ffffff", borderBottom: "1px solid #ebebf0" }}
+          className="flex-shrink-0"
+          style={{ background: "var(--surface)", borderBottom: "1px solid var(--forge-100)" }}
         >
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <h1
-                className="text-[20px] leading-tight"
-                style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, color: "#111113" }}
-              >
-                Tableau de bord
-              </h1>
-              <p className="text-[13px] mt-0.5" style={{ color: "#8e8e98" }}>
-                Vue d'ensemble de vos prospects
-              </p>
-            </div>
+          <div className="px-6 pt-5">
+            <h1
+              className="text-[20px] font-display leading-tight"
+              style={{ fontWeight: 800, color: "var(--forge-900)" }}
+            >
+              Tableau de bord
+            </h1>
+            <p className="text-[13px] mt-0.5 mb-4" style={{ color: "var(--forge-400)" }}>
+              Vue d'ensemble de vos prospects
+            </p>
           </div>
 
-          {/* KPI cards row */}
-          <div className="grid grid-cols-4 gap-3 pb-5">
-            {KPI_CONFIG.map(({ key, label, accent, lightBg, emoji }) => {
+          {/* Readiness checklist */}
+          {showChecklist && (
+            <div
+              className="mx-6 mb-4 rounded-xl overflow-hidden"
+              style={{ border: "1px solid #fed7aa", background: "#fff7ed" }}
+            >
+              <div className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5 flex-shrink-0">
+                  <span className="text-lg">🚀</span>
+                  <div>
+                    <p
+                      className="text-[12px] font-display"
+                      style={{ fontWeight: 700, color: "#9a3412" }}
+                    >
+                      Mise en route — {readiness.completed_steps}/{readiness.total_steps}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ width: "100px", background: "#fed7aa" }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${(readiness.completed_steps / readiness.total_steps) * 100}%`,
+                            background: "#ea580c",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {READINESS_STEPS.map(({ key, label, href }) => {
+                    const done = readiness[key as keyof typeof readiness] as boolean;
+                    if (done) return null;
+                    return href ? (
+                      <Link
+                        key={key}
+                        href={href}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors"
+                        style={{ background: "#ffedd5", color: "#c2410c", border: "1px solid #fed7aa" }}
+                      >
+                        <Circle className="w-2.5 h-2.5" />
+                        {label}
+                        <ChevronRight className="w-2.5 h-2.5" />
+                      </Link>
+                    ) : (
+                      <span
+                        key={key}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg"
+                        style={{ background: "#ffedd5", color: "#c2410c", border: "1px solid #fed7aa" }}
+                      >
+                        <Circle className="w-2.5 h-2.5" />
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* KPI cards */}
+          <div className="grid grid-cols-4 gap-3 px-6 pb-5">
+            {KPI_CONFIG.map(({ key, label, accent, bg, emoji }) => {
               const value = kpiValues[key] ?? 0;
               return (
                 <div
                   key={key}
                   className="rounded-xl p-4 relative overflow-hidden"
-                  style={{
-                    background: "#ffffff",
-                    border: "1px solid #ebebf0",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                  }}
+                  style={{ background: "var(--surface)", border: "1px solid var(--forge-100)" }}
                 >
-                  {/* Top accent bar */}
                   <div
                     className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl"
                     style={{ background: accent }}
                   />
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-sm mb-3"
-                    style={{ background: lightBg }}
+                    style={{ background: bg }}
                   >
-                    {emoji || <span style={{ color: accent }}>●</span>}
+                    {emoji}
                   </div>
                   <p
-                    className="text-[28px] leading-none mb-1"
-                    style={{
-                      fontFamily: "'Bricolage Grotesque', sans-serif",
-                      fontWeight: 800,
-                      color: showKPIs ? accent : "#d4d4dc",
-                    }}
+                    className="text-[28px] leading-none mb-1 font-display"
+                    style={{ fontWeight: 800, color: showKPIs ? accent : "var(--forge-200)" }}
                   >
                     {showKPIs ? value : "—"}
                   </p>
-                  <p className="text-[12px] font-medium" style={{ color: "#8e8e98" }}>
+                  <p className="text-[12px] font-medium" style={{ color: "var(--forge-500)" }}>
                     {label}
                   </p>
                 </div>
@@ -151,39 +196,34 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Filters + Search ── */}
+        {/* Filters + Search */}
         <div
-          className="px-6 py-3 flex items-center gap-3"
-          style={{ background: "#ffffff", borderBottom: "1px solid #ebebf0" }}
+          className="flex-shrink-0 px-6 py-3 flex items-center gap-3"
+          style={{ background: "var(--surface)", borderBottom: "1px solid var(--forge-100)" }}
         >
-          {/* Search */}
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#8e8e98" }} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
+              style={{ color: "var(--forge-400)" }}
+            />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher…"
-              className="w-full pl-9 pr-3 py-2 text-[13px] outline-none"
-              style={{
-                border: "1px solid #ebebf0",
-                borderRadius: "8px",
-                background: "#f8f8fb",
-                color: "#111113",
-                fontFamily: "'DM Sans', sans-serif",
-              }}
+              className="forge-input pl-9"
+              style={{ background: "var(--canvas)" }}
               onFocus={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = "#8e8e98";
-                (e.currentTarget as HTMLElement).style.background = "#fff";
+                (e.currentTarget as HTMLElement).style.background = "var(--surface)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--forge-400)";
               }}
               onBlur={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = "#ebebf0";
-                (e.currentTarget as HTMLElement).style.background = "#f8f8fb";
+                (e.currentTarget as HTMLElement).style.background = "var(--canvas)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--forge-100)";
               }}
             />
           </div>
 
-          {/* Status filters */}
           <div className="flex gap-1.5">
             {STATUS_FILTERS.map(({ label, value }) => {
               const active = statusFilter === value;
@@ -193,10 +233,10 @@ export default function DashboardPage() {
                   onClick={() => setStatusFilter(value)}
                   className="px-3 py-1.5 text-[12px] rounded-lg transition-all"
                   style={{
-                    background: active ? "#111113" : "transparent",
-                    color: active ? "#ffffff" : "#5a5a62",
+                    background: active ? "var(--forge-900)" : "transparent",
+                    color: active ? "#ffffff" : "var(--forge-600)",
                     fontWeight: active ? 600 : 500,
-                    border: active ? "1px solid #111113" : "1px solid #ebebf0",
+                    border: active ? "1px solid var(--forge-900)" : "1px solid var(--forge-100)",
                   }}
                 >
                   {label}
@@ -206,15 +246,21 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── List ── */}
-        <div className="flex-1 overflow-y-auto" style={{ background: "#ffffff" }}>
+        {/* List */}
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{ background: "var(--surface)" }}
+        >
           {(artisanLoading || isLoading) && (
             <div className="flex items-center justify-center py-24">
-              <div className="w-5 h-5 border-2 border-gray-200 border-t-indigo-500 rounded-full animate-spin" />
+              <div
+                className="w-5 h-5 rounded-full border-2"
+                style={{ borderColor: "var(--forge-100)", borderTopColor: "#ea580c", animation: "spin 0.7s linear infinite" }}
+              />
             </div>
           )}
           {error && (
-            <div className="p-8 text-center text-[13px] text-red-500">
+            <div className="p-8 text-center text-[13px]" style={{ color: "#dc2626" }}>
               Erreur de chargement des conversations
             </div>
           )}

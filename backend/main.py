@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from backend.config import settings
 from backend.database import engine, Base
-from backend.api.routes import webhook, artisan, conversation
+from backend.api.routes import webhook, artisan, conversation, geo
 
 # Configure logging
 logging.basicConfig(
@@ -48,6 +48,7 @@ app.add_middleware(
 app.include_router(webhook.router)
 app.include_router(artisan.router)
 app.include_router(conversation.router)
+app.include_router(geo.router)
 
 
 @app.get("/health")

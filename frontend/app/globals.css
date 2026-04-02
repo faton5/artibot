@@ -2,11 +2,150 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+/* ── Design tokens ─────────────────────────────────────────────── */
+:root {
+  --forge-950: #08080a;
+  --forge-900: #111113;
+  --forge-800: #1e1e22;
+  --forge-700: #3a3a40;
+  --forge-600: #5a5a62;
+  --forge-500: #75757f;
+  --forge-400: #8e8e98;
+  --forge-300: #b0b0ba;
+  --forge-200: #d0d0d8;
+  --forge-100: #e8e8ef;
+  --forge-50:  #f2f2f7;
+
+  --amber-700: #b45309;
+  --amber-600: #d97706;
+  --amber-500: #f59e0b;
+  --amber-400: #fbbf24;
+  --amber-100: #fef3c7;
+  --amber-50:  #fffbeb;
+
+  --canvas:    #f7f6f3;
+  --surface:   #ffffff;
+  --sidebar-w: 240px;
+
+  --hot:  #ef4444;
+  --warm: #f97316;
+  --cold: #9ca3af;
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
 @layer base {
-  * {
-    box-sizing: border-box;
+  * { box-sizing: border-box; }
+
+  html {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    background: var(--canvas);
+    color: var(--forge-900);
   }
+
+  ::selection {
+    background: #fbbf24;
+    color: #111113;
+  }
+}
+
+/* ── Component classes ─────────────────────────────────────────── */
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 cursor-pointer;
+    background: var(--forge-900);
+    color: #fff;
+    border: 1px solid var(--forge-900);
+  }
+  .btn-primary:hover  { background: var(--forge-700); border-color: var(--forge-700); }
+  .btn-primary:active { background: var(--forge-950); }
+
+  .btn-amber {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 cursor-pointer;
+    background: #ea580c;
+    color: #fff;
+    border: 1px solid #ea580c;
+  }
+  .btn-amber:hover  { background: #c2410c; border-color: #c2410c; }
+
+  .btn-outline {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 cursor-pointer;
+    background: transparent;
+    color: var(--forge-700);
+    border: 1px solid var(--forge-100);
+  }
+  .btn-outline:hover { background: var(--forge-50); border-color: var(--forge-200); }
+
+  /* Inputs */
+  .forge-input {
+    @apply w-full px-3 py-2 text-[13px] rounded-lg outline-none transition-all;
+    background: var(--surface);
+    color: var(--forge-900);
+    border: 1px solid var(--forge-100);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .forge-input:focus {
+    border-color: var(--forge-400);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+  }
+  .forge-input::placeholder { color: var(--forge-300); }
+
+  /* Nav items */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-100 cursor-pointer;
+    color: var(--forge-600);
+  }
+  .nav-item:hover { background: var(--forge-50); color: var(--forge-900); }
+  .nav-item.active {
+    background: #fff7ed;
+    color: #c2410c;
+    font-weight: 600;
+  }
+
+  /* Score badges */
+  .score-hot  { background: #fef2f2; color: #dc2626; }
+  .score-warm { background: #fff7ed; color: #ea580c; }
+  .score-cold { background: var(--forge-50); color: var(--forge-500); }
+
+  /* Cards */
+  .card {
+    @apply rounded-2xl;
+    background: var(--surface);
+    border: 1px solid var(--forge-100);
+  }
+}
+
+/* ── Animations ────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-up    { animation: fade-up  0.25s ease both; }
+.animate-fade-in    { animation: fade-in  0.2s  ease both; }
+.animate-pulse-dot  { animation: pulse-dot 2.5s ease-in-out infinite; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

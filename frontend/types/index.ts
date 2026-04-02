@@ -48,7 +48,6 @@ export interface ArtisanConfig {
   metier?: string;
   ville?: string;
   zone?: string;
-  tarifs?: Record<string, string>;
   delais?: string;
   ton?: string;
   message_accueil?: string;
@@ -69,10 +68,48 @@ export interface Rapport {
   created_at: string;
 }
 
-export interface DashboardStats {
-  total_prospects: number;
-  qualified_prospects: number;
-  qualification_rate: number;
-  active_conversations: number;
-  channels: Record<Channel, number>;
+export interface ProspectWithConversation extends Prospect {
+  created_at: string;
+  conversation: {
+    id: string;
+    channel: Channel;
+    status: ConversationStatus;
+    created_at: string;
+  } | null;
+}
+
+export interface RapportWithMeta {
+  id: string;
+  conversation_id: string;
+  channel: Channel;
+  html_content: string;
+  sent_at: string | null;
+  created_at: string;
+  prospect: {
+    id: string;
+    name: string | null;
+    score: ProspectScore;
+  } | null;
+}
+
+export interface ReadinessStatus {
+  gmail_connected: boolean;
+  knowledge_ready: boolean;
+  bot_config_ready: boolean;
+  welcome_message_ready: boolean;
+  has_test_conversation: boolean;
+  completed_steps: number;
+  total_steps: number;
+}
+
+export interface CitySuggestion {
+  name: string;
+  postal_code: string | null;
+  postal_codes: string[];
+  department_code: string | null;
+  department_name: string | null;
+  region_name: string | null;
+  insee_code: string | null;
+  population: number | null;
+  label: string;
 }

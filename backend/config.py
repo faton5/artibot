@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     # Frontend
     NEXT_PUBLIC_API_URL: str = "http://localhost:8000"
+    FRONTEND_URL: str = "http://localhost:3000"
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]

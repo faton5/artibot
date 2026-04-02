@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { artisanApi } from "@/lib/api";
+import { artisanApi, geoApi } from "@/lib/api";
+import { CitySuggestion } from "@/types";
 import { Bot, ChevronRight, ChevronLeft, Check } from "lucide-react";
 
 const STEPS = ["Identité", "Tarifs & Zone", "Ton du bot", "Connexion Gmail"];
@@ -28,6 +29,42 @@ export default function OnboardingPage() {
 
   const update = (key: string, value: string | number) => setForm((p) => ({ ...p, [key]: value }));
 
+  // City autocomplete
+  const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const cityDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cityBoxRef = useRef<HTMLDivElement>(null);
+
+  const handleCityInput = (value: string) => {
+    update("ville", value);
+    if (cityDebounce.current) clearTimeout(cityDebounce.current);
+    if (value.length < 2) { setCitySuggestions([]); setCityDropdownOpen(false); return; }
+    cityDebounce.current = setTimeout(async () => {
+      try {
+        const results = await geoApi.searchCities(value);
+        setCitySuggestions(results);
+        setCityDropdownOpen(results.length > 0);
+      } catch { /* ignore */ }
+    }, 280);
+  };
+
+  const pickCity = (city: CitySuggestion) => {
+    update("ville", city.name);
+    setCityDropdownOpen(false);
+    setCitySuggestions([]);
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (cityBoxRef.current && !cityBoxRef.current.contains(e.target as Node)) {
+        setCityDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const handleFinish = async () => {
     setLoading(true);
     try {
@@ -43,7 +80,6 @@ export default function OnboardingPage() {
           ton: form.ton,
           message_accueil: form.message_accueil || `Bonjour ! Je suis l'assistant de ${form.name.split(" ")[0]}. Comment puis-je vous aider ?`,
           message_threshold: form.message_threshold,
-          tarifs: form.tarifs_note ? { note: form.tarifs_note } : {},
         },
       });
       localStorage.setItem("artisan_id", artisan.id);
@@ -133,15 +169,40 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="font-semibold text-gray-900">Tarifs & Zone d'intervention</h2>
-              <div>
+              <div ref={cityBoxRef} className="relative">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Ville principale</label>
                 <input
                   type="text"
                   value={form.ville}
-                  onChange={(e) => update("ville", e.target.value)}
+                  onChange={(e) => handleCityInput(e.target.value)}
+                  onFocus={() => citySuggestions.length > 0 && setCityDropdownOpen(true)}
                   placeholder="Rennes"
+                  autoComplete="off"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {cityDropdownOpen && citySuggestions.length > 0 && (
+                  <div
+                    className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                    style={{ maxHeight: 220, overflowY: "auto" }}
+                  >
+                    {citySuggestions.map((city, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-baseline gap-2"
+                        onMouseDown={(e) => { e.preventDefault(); pickCity(city); }}
+                      >
+                        <span className="font-medium text-gray-900">{city.name}</span>
+                        {city.postal_code && (
+                          <span className="text-xs text-gray-400">{city.postal_code}</span>
+                        )}
+                        {city.department_name && (
+                          <span className="text-xs text-gray-400 ml-auto">{city.department_name}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Zone d'intervention</label>

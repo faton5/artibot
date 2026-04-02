@@ -16,7 +16,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <ClerkProvider nonce={nonce} dynamic>
       <html lang="fr">
-        <body className="bg-gray-50 text-gray-900 antialiased">{children}</body>
+        <body className="antialiased">{children}</body>
       </html>
     </ClerkProvider>
   );

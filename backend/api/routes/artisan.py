@@ -1,5 +1,7 @@
 import json
 import logging
+import secrets
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -11,7 +13,7 @@ from google_auth_oauthlib.flow import Flow
 from cryptography.fernet import Fernet
 
 from backend.database import get_db
-from backend.models.database import Artisan, KnowledgeChunk
+from backend.models.database import Artisan, KnowledgeChunk, Prospect, Conversation
 from backend.services.rag import RAGService
 from backend.config import settings
 
@@ -46,6 +48,15 @@ class QAEntry(BaseModel):
 def create_artisan(payload: ArtisanCreate, db: Session = Depends(get_db)):
     existing = db.query(Artisan).filter(Artisan.email == payload.email).first()
     if existing:
+        # Si l'enregistrement n'a pas encore de clerk_user_id, on le revendique
+        if existing.clerk_user_id is None and payload.clerk_user_id:
+            existing.clerk_user_id = payload.clerk_user_id
+            if payload.config_json:
+                existing.config_json = payload.config_json
+            db.commit()
+            db.refresh(existing)
+            return _artisan_to_dict(existing)
+        # Email déjà lié à un autre compte Clerk
         raise HTTPException(status_code=409, detail="Email déjà utilisé")
 
     artisan = Artisan(
@@ -95,11 +106,12 @@ def delete_artisan(artisan_id: UUID, db: Session = Depends(get_db)):
 
 # ── Gmail OAuth ────────────────────────────────────────────────────────────────
 
-@router.post("/{artisan_id}/gmail/connect")
-def gmail_connect(artisan_id: UUID, db: Session = Depends(get_db)):
-    """Génère l'URL OAuth Google pour connecter Gmail."""
-    _get_or_404(db, artisan_id)
+GMAIL_CALLBACK_URI = "{api_base}/api/artisans/gmail/callback"
 
+
+def _gmail_flow(artisan_id: str | None = None, state: str | None = None):
+    """Crée un Flow OAuth Google avec URI fixe (artisan_id dans state)."""
+    callback_uri = GMAIL_CALLBACK_URI.format(api_base=settings.APP_BASE_URL)
     flow = Flow.from_client_config(
         {
             "web": {
@@ -107,45 +119,52 @@ def gmail_connect(artisan_id: UUID, db: Session = Depends(get_db)):
                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [f"{settings.NEXT_PUBLIC_API_URL}/api/artisans/{artisan_id}/gmail/callback"],
-            }
-        },
-        scopes=GOOGLE_SCOPES,
-    )
-    flow.redirect_uri = f"{settings.NEXT_PUBLIC_API_URL}/api/artisans/{artisan_id}/gmail/callback"
-
-    auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent",
-    )
-    return {"auth_url": auth_url, "state": state}
-
-
-@router.get("/{artisan_id}/gmail/callback")
-def gmail_callback(
-    artisan_id: UUID,
-    code: str,
-    state: str,
-    db: Session = Depends(get_db),
-):
-    """Callback OAuth Google — stocke le refresh_token chiffré."""
-    artisan = _get_or_404(db, artisan_id)
-
-    flow = Flow.from_client_config(
-        {
-            "web": {
-                "client_id": settings.GOOGLE_CLIENT_ID,
-                "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [f"{settings.NEXT_PUBLIC_API_URL}/api/artisans/{artisan_id}/gmail/callback"],
+                "redirect_uris": [callback_uri],
             }
         },
         scopes=GOOGLE_SCOPES,
         state=state,
     )
-    flow.redirect_uri = f"{settings.NEXT_PUBLIC_API_URL}/api/artisans/{artisan_id}/gmail/callback"
+    flow.redirect_uri = callback_uri
+    return flow
+
+
+@router.post("/{artisan_id}/gmail/connect")
+def gmail_connect(artisan_id: UUID, db: Session = Depends(get_db)):
+    """Génère l'URL OAuth Google pour connecter Gmail."""
+    _get_or_404(db, artisan_id)
+
+    flow = _gmail_flow()
+    # Encode artisan_id in state: "<artisan_id>:<random>"
+    random_part = secrets.token_urlsafe(16)
+    state_value = f"{artisan_id}:{random_part}"
+
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+        state=state_value,
+    )
+    return {"auth_url": auth_url, "state": state_value}
+
+
+@router.get("/gmail/callback")
+def gmail_callback(
+    code: str,
+    state: str,
+    db: Session = Depends(get_db),
+):
+    """Callback OAuth Google — URI fixe, artisan_id extrait du state."""
+    try:
+        artisan_id_str, _ = state.split(":", 1)
+        artisan_id = UUID(artisan_id_str)
+    except (ValueError, AttributeError):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="State OAuth invalide")
+
+    artisan = _get_or_404(db, artisan_id)
+
+    flow = _gmail_flow(state=state)
     flow.fetch_token(code=code)
 
     credentials = flow.credentials
@@ -155,15 +174,13 @@ def gmail_callback(
         "scopes": list(credentials.scopes or []),
     }
 
-    # Chiffrement Fernet
     f = Fernet(settings.FERNET_KEY.encode())
     encrypted = f.encrypt(json.dumps(token_data).encode()).decode()
 
     artisan.gmail_token_encrypted = encrypted
     db.commit()
 
-    # Redirection vers le frontend
-    return RedirectResponse(url=f"{settings.NEXT_PUBLIC_API_URL.replace('8000', '3000')}/settings?gmail=connected")
+    return RedirectResponse(url=f"{settings.FRONTEND_URL}/settings?gmail=connected")
 
 
 @router.delete("/{artisan_id}/gmail/disconnect")
@@ -231,6 +248,96 @@ def _get_or_404(db: Session, artisan_id: UUID) -> Artisan:
     if not artisan:
         raise HTTPException(status_code=404, detail="Artisan non trouvé")
     return artisan
+
+
+# ── Prospects ─────────────────────────────────────────────────────────────────
+
+@router.get("/{artisan_id}/prospects")
+def list_prospects(artisan_id: UUID, db: Session = Depends(get_db)):
+    _get_or_404(db, artisan_id)
+    prospects = (
+        db.query(Prospect)
+        .filter(Prospect.artisan_id == artisan_id)
+        .order_by(Prospect.created_at.desc())
+        .all()
+    )
+    result = []
+    for p in prospects:
+        conv = None
+        if p.conversations:
+            conv = sorted(p.conversations, key=lambda c: c.created_at or datetime.min, reverse=True)[0]
+        result.append({
+            "id": str(p.id),
+            "name": p.name,
+            "phone": p.phone,
+            "email": p.email,
+            "project_type": p.project_type,
+            "surface": p.surface,
+            "location": p.location,
+            "budget": p.budget,
+            "delay": p.delay,
+            "score": p.score,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "conversation": {
+                "id": str(conv.id),
+                "channel": conv.channel,
+                "status": conv.status,
+                "created_at": conv.created_at.isoformat() if conv.created_at else None,
+            } if conv else None,
+        })
+    return result
+
+
+# ── Reports ───────────────────────────────────────────────────────────────────
+
+@router.get("/{artisan_id}/reports")
+def list_reports(artisan_id: UUID, db: Session = Depends(get_db)):
+    _get_or_404(db, artisan_id)
+    conversations = db.query(Conversation).filter(Conversation.artisan_id == artisan_id).all()
+    result = []
+    for conv in conversations:
+        if conv.rapport:
+            r = conv.rapport
+            result.append({
+                "id": str(r.id),
+                "conversation_id": str(conv.id),
+                "channel": conv.channel,
+                "html_content": r.html_content,
+                "sent_at": r.sent_at.isoformat() if r.sent_at else None,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "prospect": {
+                    "id": str(conv.prospect.id),
+                    "name": conv.prospect.name,
+                    "score": conv.prospect.score,
+                } if conv.prospect else None,
+            })
+    result.sort(key=lambda x: x["created_at"] or "", reverse=True)
+    return result
+
+
+# ── Readiness ─────────────────────────────────────────────────────────────────
+
+@router.get("/{artisan_id}/readiness")
+def get_readiness(artisan_id: UUID, db: Session = Depends(get_db)):
+    artisan = _get_or_404(db, artisan_id)
+    config = artisan.config_json or {}
+
+    gmail_connected = artisan.gmail_token_encrypted is not None
+    knowledge_ready = db.query(KnowledgeChunk).filter(KnowledgeChunk.artisan_id == artisan_id).count() > 0
+    bot_config_ready = bool(config.get("metier"))
+    welcome_message_ready = bool(config.get("message_accueil"))
+    has_test_conversation = db.query(Conversation).filter(Conversation.artisan_id == artisan_id).count() > 0
+
+    steps = [gmail_connected, knowledge_ready, bot_config_ready, welcome_message_ready, has_test_conversation]
+    return {
+        "gmail_connected": gmail_connected,
+        "knowledge_ready": knowledge_ready,
+        "bot_config_ready": bot_config_ready,
+        "welcome_message_ready": welcome_message_ready,
+        "has_test_conversation": has_test_conversation,
+        "completed_steps": sum(1 for s in steps if s),
+        "total_steps": 5,
+    }
 
 
 def _artisan_to_dict(artisan: Artisan) -> dict:
