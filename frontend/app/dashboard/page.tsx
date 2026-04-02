@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
@@ -34,9 +35,16 @@ const READINESS_STEPS = [
 ] as const;
 
 export default function DashboardPage() {
-  const { artisanId, isLoading: artisanLoading } = useCurrentArtisan();
+  const router = useRouter();
+  const { artisanId, isLoading: artisanLoading, needsOnboarding } = useCurrentArtisan();
   const [statusFilter, setStatusFilter] = useState<ConversationStatus | "">("");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!artisanLoading && needsOnboarding) {
+      router.replace("/onboarding");
+    }
+  }, [artisanLoading, needsOnboarding, router]);
 
   const { data: conversations = [], isLoading, error } = useSWR(
     artisanId ? ["conversations", artisanId, statusFilter] : null,
