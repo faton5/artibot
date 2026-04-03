@@ -127,8 +127,34 @@ export const readinessApi = {
 };
 
 // ── Geo ───────────────────────────────────────────────────────────────────────
+// Appel direct à l'API gouvernementale (CORS activé, pas besoin du backend proxy)
 
 export const geoApi = {
-  searchCities: (query: string, limit = 8) =>
-    apiFetch<CitySuggestion[]>(`/api/geo/cities?q=${encodeURIComponent(query)}&limit=${limit}`),
+  searchCities: async (query: string, limit = 8): Promise<CitySuggestion[]> => {
+    const params = new URLSearchParams({
+      nom: query.trim(),
+      fields: "nom,code,codesPostaux,departement,region,population",
+      boost: "population",
+      limit: String(limit),
+    });
+    const res = await fetch(`https://geo.api.gouv.fr/communes?${params}`);
+    if (!res.ok) throw new Error("Erreur API géo");
+    const data: any[] = await res.json();
+    return data.map((city) => {
+      const postalCodes: string[] = city.codesPostaux || [];
+      const department = city.departement || {};
+      const region = city.region || {};
+      return {
+        name: city.nom,
+        postal_code: postalCodes[0] ?? null,
+        postal_codes: postalCodes,
+        department_code: department.code ?? null,
+        department_name: department.nom ?? null,
+        region_name: region.nom ?? null,
+        insee_code: city.code ?? null,
+        population: city.population ?? null,
+        label: [city.nom, postalCodes[0], department.nom].filter(Boolean).join(" · "),
+      };
+    });
+  },
 };

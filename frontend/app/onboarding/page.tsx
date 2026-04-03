@@ -5,9 +5,17 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { artisanApi, geoApi } from "@/lib/api";
 import { CitySuggestion } from "@/types";
-import { Bot, ChevronRight, ChevronLeft, Check } from "lucide-react";
 
 const STEPS = ["Identité", "Tarifs & Zone", "Ton du bot", "Connexion Gmail"];
+
+const TRADE_OPTIONS = [
+  { value: "plombier", label: "Plombier", icon: "plumbing" },
+  { value: "electricien", label: "Électricien", icon: "bolt" },
+  { value: "peintre", label: "Peintre", icon: "format_paint" },
+  { value: "macon", label: "Maçon", icon: "construction" },
+  { value: "menuisier", label: "Menuisier", icon: "carpenter" },
+  { value: "autre", label: "Autre", icon: "handyman" },
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -29,7 +37,6 @@ export default function OnboardingPage() {
 
   const update = (key: string, value: string | number) => setForm((p) => ({ ...p, [key]: value }));
 
-  // City autocomplete
   const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   const cityDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,7 +61,6 @@ export default function OnboardingPage() {
     setCitySuggestions([]);
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (cityBoxRef.current && !cityBoxRef.current.contains(e.target as Node)) {
@@ -91,163 +97,143 @@ export default function OnboardingPage() {
     }
   };
 
+  const inputStyle = {
+    width: "100%",
+    padding: "10px 14px",
+    borderRadius: "12px",
+    border: "1.5px solid #e7e8e9",
+    background: "#f3f4f5",
+    color: "#191c1d",
+    fontSize: "14px",
+    fontFamily: "'Inter', sans-serif",
+    outline: "none",
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#f3f4f5" }}>
+      <div className="w-full max-w-xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Bot className="w-7 h-7 text-white" />
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
+            style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)" }}>
+            <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>robot</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Configurer ArtiBot</h1>
-          <p className="text-gray-500 text-sm mt-1">Moins de 15 minutes pour démarrer</p>
+          <h1 className="text-3xl font-extrabold font-headline tracking-tight" style={{ color: "#191c1d" }}>Configurer ArtiBot</h1>
+          <p className="text-sm mt-2" style={{ color: "#564334" }}>Moins de 2 minutes pour avoir un assistant prêt à l'emploi</p>
         </div>
 
         {/* Progress */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-10">
           {STEPS.map((label, i) => (
-            <div key={i} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+            <div key={i} className="flex items-center flex-1">
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all"
+                  style={
                     i < step
-                      ? "bg-green-500 text-white"
+                      ? { background: "#904d00", color: "#fff" }
                       : i === step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-400"
-                  }`}
-                >
-                  {i < step ? <Check className="w-4 h-4" /> : i + 1}
+                      ? { background: "#904d00", color: "#fff", boxShadow: "0 0 0 4px rgba(144,77,0,0.15)" }
+                      : { background: "#e7e8e9", color: "#564334" }
+                  }>
+                  {i < step ? (
+                    <span className="material-symbols-outlined text-base">check</span>
+                  ) : i + 1}
                 </div>
-                <span className="text-xs text-gray-400 mt-1 w-16 text-center">{label}</span>
+                <span className="text-xs mt-1.5 text-center font-medium" style={{ color: i <= step ? "#904d00" : "#897362", width: "64px" }}>{label}</span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`h-0.5 w-16 mx-1 mb-4 ${i < step ? "bg-green-500" : "bg-gray-200"}`} />
+                <div className="flex-1 h-0.5 mx-1 mb-5 rounded-full" style={{ background: i < step ? "#904d00" : "#e7e8e9" }} />
               )}
             </div>
           ))}
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="rounded-3xl p-8 shadow-sm" style={{ background: "#ffffff" }}>
           {step === 0 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900">Vos informations</h2>
+            <div className="space-y-5">
+              <h2 className="font-extrabold font-headline text-xl" style={{ color: "#191c1d" }}>Vos informations</h2>
+              {[
+                { label: "Prénom et Nom *", key: "name", placeholder: "Jean-Pierre Moreau", type: "text" },
+                { label: "Email professionnel *", key: "email", placeholder: "contact@mon-entreprise.fr", type: "email" },
+              ].map(({ label, key, placeholder, type }) => (
+                <div key={key}>
+                  <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#564334" }}>{label}</label>
+                  <input type={type} value={(form as any)[key]} onChange={(e) => update(key, e.target.value)} placeholder={placeholder} style={inputStyle} />
+                </div>
+              ))}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Prénom et Nom *</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => update("name", e.target.value)}
-                  placeholder="Jean-Pierre Moreau"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Email professionnel *</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="contact@mon-entreprise.fr"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Métier *</label>
-                <input
-                  type="text"
-                  value={form.metier}
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#564334" }}>Métier *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {TRADE_OPTIONS.map(({ value, label, icon }) => (
+                    <button key={value} type="button" onClick={() => update("metier", value)}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl text-sm font-medium transition-all"
+                      style={form.metier === value
+                        ? { background: "#ffdcc3", border: "2px solid #904d00", color: "#623200" }
+                        : { background: "#f3f4f5", border: "1.5px solid #e7e8e9", color: "#564334" }
+                      }>
+                      <span className="material-symbols-outlined text-xl" style={{ color: form.metier === value ? "#904d00" : "#564334", fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <input type="text" value={form.metier && !TRADE_OPTIONS.find((o) => o.value === form.metier) ? form.metier : ""}
                   onChange={(e) => update("metier", e.target.value)}
-                  placeholder="peintre en bâtiment, plombier, électricien..."
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  placeholder="Ou saisissez votre métier..."
+                  className="mt-2" style={{ ...inputStyle, marginTop: "8px" }} />
               </div>
             </div>
           )}
 
           {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900">Tarifs & Zone d'intervention</h2>
+            <div className="space-y-5">
+              <h2 className="font-extrabold font-headline text-xl" style={{ color: "#191c1d" }}>Tarifs & Zone d'intervention</h2>
               <div ref={cityBoxRef} className="relative">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Ville principale</label>
-                <input
-                  type="text"
-                  value={form.ville}
-                  onChange={(e) => handleCityInput(e.target.value)}
+                <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#564334" }}>Ville principale</label>
+                <input type="text" value={form.ville} onChange={(e) => handleCityInput(e.target.value)}
                   onFocus={() => citySuggestions.length > 0 && setCityDropdownOpen(true)}
-                  placeholder="Rennes"
-                  autoComplete="off"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  placeholder="Rennes" autoComplete="off" style={inputStyle} />
                 {cityDropdownOpen && citySuggestions.length > 0 && (
-                  <div
-                    className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
-                    style={{ maxHeight: 220, overflowY: "auto" }}
-                  >
+                  <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-xl shadow-lg overflow-hidden" style={{ background: "#ffffff", border: "1px solid #e7e8e9", maxHeight: 220, overflowY: "auto" }}>
                     {citySuggestions.map((city, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-baseline gap-2"
-                        onMouseDown={(e) => { e.preventDefault(); pickCity(city); }}
-                      >
-                        <span className="font-medium text-gray-900">{city.name}</span>
-                        {city.postal_code && (
-                          <span className="text-xs text-gray-400">{city.postal_code}</span>
-                        )}
-                        {city.department_name && (
-                          <span className="text-xs text-gray-400 ml-auto">{city.department_name}</span>
-                        )}
+                      <button key={i} type="button"
+                        className="w-full text-left px-4 py-2.5 text-sm flex items-baseline gap-2 transition-colors"
+                        style={{ color: "#191c1d" }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f5")}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                        onMouseDown={(e) => { e.preventDefault(); pickCity(city); }}>
+                        <span className="font-semibold">{city.name}</span>
+                        {city.postal_code && <span className="text-xs" style={{ color: "#564334" }}>{city.postal_code}</span>}
+                        {city.department_name && <span className="text-xs ml-auto" style={{ color: "#897362" }}>{city.department_name}</span>}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
+              {[
+                { label: "Zone d'intervention", key: "zone", placeholder: "Rennes et 30km alentour" },
+                { label: "Délais habituels", key: "delais", placeholder: "3 à 5 semaines selon disponibilité" },
+              ].map(({ label, key, placeholder }) => (
+                <div key={key}>
+                  <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#564334" }}>{label}</label>
+                  <input type="text" value={(form as any)[key]} onChange={(e) => update(key, e.target.value)} placeholder={placeholder} style={inputStyle} />
+                </div>
+              ))}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Zone d'intervention</label>
-                <input
-                  type="text"
-                  value={form.zone}
-                  onChange={(e) => update("zone", e.target.value)}
-                  placeholder="Rennes et 30km alentour"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Délais habituels</label>
-                <input
-                  type="text"
-                  value={form.delais}
-                  onChange={(e) => update("delais", e.target.value)}
-                  placeholder="3 à 5 semaines selon disponibilité"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Tarifs indicatifs (vous pourrez importer un PDF plus tard)
-                </label>
-                <textarea
-                  value={form.tarifs_note}
-                  onChange={(e) => update("tarifs_note", e.target.value)}
+                <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#564334" }}>Tarifs indicatifs</label>
+                <textarea value={form.tarifs_note} onChange={(e) => update("tarifs_note", e.target.value)}
                   placeholder="Ex: Peinture intérieure 22€/m², Ravalement façade 45€/m²..."
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-none"
-                />
+                  style={{ ...inputStyle, minHeight: "80px", resize: "none" }} />
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900">Personnalisation du bot</h2>
+            <div className="space-y-5">
+              <h2 className="font-extrabold font-headline text-xl" style={{ color: "#191c1d" }}>Personnalisation du bot</h2>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Ton du bot</label>
-                <select
-                  value={form.ton}
-                  onChange={(e) => update("ton", e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
+                <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#564334" }}>Ton du bot</label>
+                <select value={form.ton} onChange={(e) => update("ton", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
                   <option value="professionnel et chaleureux">Professionnel et chaleureux</option>
                   <option value="professionnel">Professionnel</option>
                   <option value="chaleureux et décontracté">Chaleureux et décontracté</option>
@@ -255,29 +241,21 @@ export default function OnboardingPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Message d'accueil (optionnel)</label>
-                <textarea
-                  value={form.message_accueil}
-                  onChange={(e) => update("message_accueil", e.target.value)}
+                <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#564334" }}>Message d'accueil (optionnel)</label>
+                <textarea value={form.message_accueil} onChange={(e) => update("message_accueil", e.target.value)}
                   placeholder={`Bonjour ! Je suis l'assistant de ${form.name || "Jean-Pierre"}. Comment puis-je vous aider ?`}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-none"
-                />
+                  style={{ ...inputStyle, minHeight: "80px", resize: "none" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Envoyer le rapport après {form.message_threshold} messages
+                <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#564334" }}>
+                  Envoyer le rapport après <span style={{ color: "#904d00" }}>{form.message_threshold}</span> messages
                 </label>
-                <input
-                  type="range"
-                  min={3}
-                  max={12}
-                  value={form.message_threshold}
+                <input type="range" min={3} max={12} value={form.message_threshold}
                   onChange={(e) => update("message_threshold", parseInt(e.target.value))}
-                  className="w-full accent-blue-600"
-                />
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  className="w-full" style={{ accentColor: "#904d00" }} />
+                <div className="flex justify-between text-xs mt-1" style={{ color: "#897362" }}>
                   <span>3 (rapide)</span>
-                  <span className="font-medium text-blue-600">{form.message_threshold} messages</span>
+                  <span className="font-bold" style={{ color: "#904d00" }}>{form.message_threshold} messages</span>
                   <span>12 (approfondi)</span>
                 </div>
               </div>
@@ -285,51 +263,50 @@ export default function OnboardingPage() {
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900">Connexion Gmail</h2>
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                <p className="text-sm text-blue-800 font-medium mb-1">Pourquoi connecter Gmail ?</p>
-                <p className="text-xs text-blue-600">
+            <div className="space-y-5">
+              <h2 className="font-extrabold font-headline text-xl" style={{ color: "#191c1d" }}>Connexion Gmail</h2>
+              <div className="p-5 rounded-2xl" style={{ background: "#c7e7ff", border: "1px solid #00b5fc" }}>
+                <p className="text-sm font-bold mb-1" style={{ color: "#004360" }}>Pourquoi connecter Gmail ?</p>
+                <p className="text-xs" style={{ color: "#00658f" }}>
                   ArtiBot répondra automatiquement aux emails de vos prospects depuis votre adresse Gmail, 24h/24.
                   La connexion est sécurisée via OAuth Google (nous ne voyons jamais votre mot de passe).
                 </p>
               </div>
-              <p className="text-sm text-gray-600">
+              <div className="p-4 rounded-2xl flex items-center gap-3" style={{ background: "#ffdcc3" }}>
+                <span className="material-symbols-outlined" style={{ color: "#904d00", fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <p className="text-sm" style={{ color: "#623200" }}>Vos données sont sécurisées et ne seront jamais partagées.</p>
+              </div>
+              <p className="text-sm" style={{ color: "#564334" }}>
                 Cliquez sur "Terminer" pour créer votre compte, puis connectez Gmail depuis les paramètres.
               </p>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-            <button
-              onClick={() => setStep((s) => s - 1)}
-              disabled={step === 0}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-30 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
+          <div className="flex items-center justify-between mt-8 pt-6" style={{ borderTop: "1px solid #f3f4f5" }}>
+            <button onClick={() => setStep((s) => s - 1)} disabled={step === 0}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-30"
+              style={{ color: "#564334" }}>
+              <span className="material-symbols-outlined text-base">chevron_left</span>
               Précédent
             </button>
 
             {step < STEPS.length - 1 ? (
-              <button
-                onClick={() => setStep((s) => s + 1)}
+              <button onClick={() => setStep((s) => s + 1)}
                 disabled={step === 0 && (!form.name || !form.email || !form.metier)}
-                className="flex items-center gap-1.5 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-all"
+                style={{ background: "#904d00", boxShadow: "0 2px 8px rgba(144,77,0,0.2)" }}>
                 Suivant
-                <ChevronRight className="w-4 h-4" />
+                <span className="material-symbols-outlined text-base">chevron_right</span>
               </button>
             ) : (
-              <button
-                onClick={handleFinish}
-                disabled={loading}
-                className="flex items-center gap-1.5 px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-              >
+              <button onClick={handleFinish} disabled={loading}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-all"
+                style={{ background: "#904d00", boxShadow: "0 2px 8px rgba(144,77,0,0.2)" }}>
                 {loading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" style={{ animation: "spin 0.7s linear infinite" }} />
                 ) : (
-                  <Check className="w-4 h-4" />
+                  <span className="material-symbols-outlined text-base">check</span>
                 )}
                 Terminer
               </button>

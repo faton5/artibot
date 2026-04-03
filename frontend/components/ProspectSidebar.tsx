@@ -1,134 +1,89 @@
 "use client";
 
 import type { Conversation } from "@/types";
-import {
-  User, Phone, Mail, Briefcase, MapPin,
-  Wallet, Calendar, Bot, UserCheck,
-} from "lucide-react";
 
 interface Props {
   conversation: Conversation;
 }
 
 const SCORE_CONFIG = {
-  hot:  { label: "Chaud",  emoji: "🔥", bg: "#fef2f2", color: "#dc2626" },
-  warm: { label: "Tiède",  emoji: "🌡", bg: "#fff7ed", color: "#ea580c" },
-  cold: { label: "Froid",  emoji: "❄️", bg: "var(--forge-50)", color: "var(--forge-500)" },
+  hot:  { label: "Chaud",  icon: "local_fire_department", bg: "#ffdad6", color: "#93000a" },
+  warm: { label: "Tiède",  icon: "thermometer",           bg: "#ffdcc3", color: "#623200" },
+  cold: { label: "Froid",  icon: "ac_unit",               bg: "#e7e8e9", color: "#564334" },
 } as const;
+
+type ProspectStringKey = "name" | "phone" | "email" | "project_type" | "surface" | "location" | "budget" | "delay";
+const FIELDS: { key: ProspectStringKey; label: string; icon: string }[] = [
+  { key: "name",         label: "Nom",          icon: "person" },
+  { key: "phone",        label: "Téléphone",    icon: "call" },
+  { key: "email",        label: "Email",        icon: "mail" },
+  { key: "project_type", label: "Travaux",      icon: "construction" },
+  { key: "surface",      label: "Surface",      icon: "square_foot" },
+  { key: "location",     label: "Localisation", icon: "location_on" },
+  { key: "budget",       label: "Budget",       icon: "payments" },
+  { key: "delay",        label: "Délai",        icon: "schedule" },
+];
 
 export function ProspectSidebar({ conversation }: Props) {
   const prospect = conversation.prospect;
   const score = prospect?.score ?? "cold";
   const sc = SCORE_CONFIG[score] ?? SCORE_CONFIG.cold;
 
-  const fields: { icon: React.ElementType; label: string; value: string | null | undefined }[] = [
-    { icon: User,     label: "Nom",          value: prospect?.name },
-    { icon: Phone,    label: "Téléphone",    value: prospect?.phone },
-    { icon: Mail,     label: "Email",        value: prospect?.email },
-    { icon: Briefcase,label: "Travaux",      value: prospect?.project_type },
-    { icon: MapPin,   label: "Surface",      value: prospect?.surface },
-    { icon: MapPin,   label: "Localisation", value: prospect?.location },
-    { icon: Wallet,   label: "Budget",       value: prospect?.budget },
-    { icon: Calendar, label: "Délai",        value: prospect?.delay },
-  ];
-
   return (
-    <aside
-      className="flex flex-col flex-shrink-0"
-      style={{
-        width: "272px",
-        borderLeft: "1px solid var(--forge-100)",
-        background: "var(--surface)",
-      }}
-    >
+    <aside className="flex flex-col flex-shrink-0" style={{ width: "272px", borderLeft: "1px solid #e7e8e9", background: "#f8f9fa" }}>
       {/* Header */}
-      <div
-        className="px-5 py-4 flex-shrink-0"
-        style={{ borderBottom: "1px solid var(--forge-100)" }}
-      >
-        <p
-          className="text-[13px] font-display"
-          style={{ fontWeight: 700, color: "var(--forge-900)" }}
-        >
-          Fiche prospect
-        </p>
+      <div className="px-5 py-4 flex-shrink-0" style={{ background: "#ffffff", borderBottom: "1px solid #f3f4f5" }}>
+        <p className="text-sm font-extrabold font-headline" style={{ color: "#191c1d" }}>Fiche prospect</p>
       </div>
 
       {/* Score */}
-      <div
-        className="px-5 py-3 flex-shrink-0"
-        style={{ borderBottom: "1px solid var(--forge-100)" }}
-      >
-        <p
-          className="text-[11px] font-medium mb-2"
-          style={{ color: "var(--forge-400)", textTransform: "uppercase", letterSpacing: "0.05em" }}
-        >
-          Maturité
-        </p>
-        <span
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold"
-          style={{ background: sc.bg, color: sc.color }}
-        >
-          {sc.emoji} {sc.label}
+      <div className="px-5 py-3 flex-shrink-0" style={{ background: "#ffffff", borderBottom: "1px solid #f3f4f5" }}>
+        <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#564334" }}>Maturité</p>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold"
+          style={{ background: sc.bg, color: sc.color }}>
+          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>{sc.icon}</span>
+          {sc.label}
         </span>
       </div>
 
       {/* Fields */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-        {fields.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex gap-3">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-              style={{ background: "var(--forge-50)" }}
-            >
-              <Icon className="w-3.5 h-3.5" style={{ color: "var(--forge-400)" }} />
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4" style={{ background: "#ffffff" }}>
+        {FIELDS.map(({ key, label, icon }) => {
+          const value = prospect?.[key as keyof typeof prospect] as string | null | undefined;
+          return (
+            <div key={label} className="flex gap-3">
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "#f3f4f5" }}>
+                <span className="material-symbols-outlined text-sm" style={{ color: "#564334" }}>{icon}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#897362" }}>{label}</p>
+                <p className="text-sm mt-0.5" style={{ color: value ? "#191c1d" : "#ddc1ae", fontStyle: value ? "normal" : "italic" }}>
+                  {value || "Non renseigné"}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p
-                className="text-[11px] font-medium"
-                style={{ color: "var(--forge-400)", textTransform: "uppercase", letterSpacing: "0.05em" }}
-              >
-                {label}
-              </p>
-              <p
-                className="text-[13px] mt-0.5"
-                style={{ color: value ? "var(--forge-900)" : "var(--forge-300)", fontStyle: value ? "normal" : "italic" }}
-              >
-                {value || "Non renseigné"}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Bot status footer */}
-      <div
-        className="px-5 py-3 flex-shrink-0"
-        style={{ borderTop: "1px solid var(--forge-100)" }}
-      >
+      <div className="px-5 py-3 flex-shrink-0" style={{ background: "#ffffff", borderTop: "1px solid #f3f4f5" }}>
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: conversation.bot_active ? "#eff6ff" : "#f0fdf4" }}
-          >
-            {conversation.bot_active ? (
-              <Bot className="w-3.5 h-3.5" style={{ color: "#2563eb" }} />
-            ) : (
-              <UserCheck className="w-3.5 h-3.5" style={{ color: "#16a34a" }} />
-            )}
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: conversation.bot_active ? "#c7e7ff" : "#fdb881" }}>
+            <span className="material-symbols-outlined text-base" style={{ color: conversation.bot_active ? "#004360" : "#2f1500", fontVariationSettings: "'FILL' 1" }}>
+              {conversation.bot_active ? "smart_toy" : "person_check"}
+            </span>
           </div>
           <div>
-            <p className="text-[12px] font-semibold" style={{ color: "var(--forge-900)" }}>
+            <p className="text-xs font-bold" style={{ color: "#191c1d" }}>
               {conversation.bot_active ? "Bot actif" : "Artisan en ligne"}
             </p>
-            <p className="text-[11px]" style={{ color: "var(--forge-400)" }}>
+            <p className="text-[11px]" style={{ color: "#564334" }}>
               {conversation.bot_active ? "Répond automatiquement" : "Vous gérez la conversation"}
             </p>
           </div>
-          <div
-            className="ml-auto w-2 h-2 rounded-full animate-pulse-dot"
-            style={{ background: conversation.bot_active ? "#2563eb" : "#16a34a" }}
-          />
+          <div className="ml-auto w-2 h-2 rounded-full animate-pulse-dot"
+            style={{ background: conversation.bot_active ? "#00658f" : "#865224" }} />
         </div>
       </div>
     </aside>

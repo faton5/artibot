@@ -2,123 +2,116 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
-import {
-  LayoutDashboard, Users, FileText, BookOpen,
-  Plug, BarChart3, Settings, Zap,
-} from "lucide-react";
+import { UserButton, useClerk } from "@clerk/nextjs";
 
-const NAV_GROUPS = [
-  {
-    items: [
-      { href: "/dashboard",    label: "Conversations",        icon: LayoutDashboard },
-      { href: "/prospects",    label: "Prospects",            icon: Users },
-      { href: "/reports",      label: "Rapports",             icon: FileText },
-    ],
-  },
-  {
-    items: [
-      { href: "/knowledge",    label: "Base de connaissance", icon: BookOpen },
-      { href: "/integrations", label: "Intégrations",         icon: Plug },
-    ],
-  },
-  {
-    items: [
-      { href: "/stats",        label: "Statistiques",         icon: BarChart3 },
-      { href: "/settings",     label: "Paramètres",           icon: Settings },
-    ],
-  },
+const NAV_ITEMS = [
+  { href: "/dashboard",    label: "Tableau de bord",       icon: "dashboard" },
+  { href: "/prospects",    label: "Prospects",              icon: "group" },
+  { href: "/reports",      label: "Rapports",               icon: "analytics" },
+  { href: "/knowledge",    label: "Base de connaissances",  icon: "menu_book" },
+  { href: "/integrations", label: "Intégrations",           icon: "extension" },
+  { href: "/settings",     label: "Paramètres",             icon: "settings" },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
+  const { signOut } = useClerk();
 
   return (
-    <nav
-      className="fixed left-0 top-0 h-full flex flex-col z-20"
-      style={{
-        width: "var(--sidebar-w)",
-        background: "var(--surface)",
-        borderRight: "1px solid var(--forge-100)",
-      }}
+    <aside
+      className="flex flex-col h-screen py-6 bg-slate-100 fixed left-0 top-0 z-50"
+      style={{ width: "var(--sidebar-w)" }}
     >
       {/* Logo */}
-      <div
-        className="flex items-center gap-2.5 px-5 h-[60px] flex-shrink-0"
-        style={{ borderBottom: "1px solid var(--forge-100)" }}
-      >
+      <div className="px-6 mb-8 flex items-center gap-3">
         <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm flex-shrink-0"
+          style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)" }}
         >
-          <Zap className="w-4 h-4" style={{ color: "#ea580c" }} />
+          <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
+            robot
+          </span>
         </div>
-        <span
-          className="text-[17px] tracking-tight font-display"
-          style={{ fontWeight: 800, color: "var(--forge-900)" }}
+        <div>
+          <h1 className="text-xl font-headline font-bold text-slate-900 leading-tight">ArtiBot</h1>
+          <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">Atelier Numérique</p>
+        </div>
+      </div>
+
+      {/* New Conversation button */}
+      <div className="px-4 mb-6">
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm text-white transition-all duration-200 active:scale-95 shadow-md"
+          style={{ background: "#904d00", boxShadow: "0 2px 8px rgba(144,77,0,0.25)" }}
         >
-          ArtiBot
-        </span>
+          <span className="material-symbols-outlined text-base">add</span>
+          Nouvelle Conversation
+        </Link>
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
-        {NAV_GROUPS.map((group, gi) => (
-          <div key={gi} className="space-y-0.5">
-            {group.items.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="nav-item"
-                  style={
-                    active
-                      ? { background: "#fff7ed", color: "#c2410c", fontWeight: 600 }
-                      : {}
-                  }
-                >
-                  <Icon
-                    className="w-4 h-4 flex-shrink-0"
-                    style={{ color: active ? "#ea580c" : "currentColor" }}
-                  />
-                  <span>{label}</span>
-                </Link>
-              );
-            })}
-            {gi < NAV_GROUPS.length - 1 && (
-              <div
-                className="mt-3 mb-1 mx-1"
-                style={{ height: "1px", background: "var(--forge-100)" }}
-              />
-            )}
-          </div>
-        ))}
+      <nav className="flex-1 space-y-0.5 overflow-y-auto">
+        {NAV_ITEMS.map(({ href, label, icon }) => {
+          const active = pathname === href || pathname.startsWith(href + "/");
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-4 py-3 text-[15px] transition-colors duration-100 ${
+                active
+                  ? "bg-white text-orange-700 font-semibold border-l-4 border-orange-700"
+                  : "text-slate-600 hover:bg-slate-200 font-medium"
+              }`}
+              style={active ? { paddingLeft: "12px" } : {}}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
+              >
+                {icon}
+              </span>
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="mt-auto pt-4 border-t border-slate-200/50 space-y-0.5">
+        <a
+          href="#"
+          className="flex items-center gap-3 px-4 py-3 text-[15px] font-medium text-slate-600 hover:bg-slate-200 transition-colors"
+        >
+          <span className="material-symbols-outlined">help</span>
+          <span>Aide</span>
+        </a>
+        <button
+          onClick={() => signOut({ redirectUrl: "/sign-in" })}
+          className="w-full flex items-center gap-3 px-4 py-3 text-[15px] font-medium text-slate-600 hover:bg-slate-200 transition-colors text-left"
+        >
+          <span className="material-symbols-outlined">logout</span>
+          <span>Déconnexion</span>
+        </button>
       </div>
 
-      {/* Bot status */}
-      <div className="px-3 pb-3">
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-xl"
-          style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}
-        >
-          <div className="w-1.5 h-1.5 rounded-full animate-pulse-dot" style={{ background: "#16a34a" }} />
-          <span className="text-[11px] font-medium" style={{ color: "#15803d" }}>
-            GPT-4o actif
-          </span>
+      {/* GPT-4o status */}
+      <div className="px-4 pt-3 pb-1">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-full bg-white/70 backdrop-blur-md shadow-sm border border-primary/10">
+          <div className="relative flex h-2.5 w-2.5 flex-shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+          </div>
+          <span className="text-xs font-semibold text-slate-700 font-headline tracking-tight">GPT-4o actif</span>
+          <span className="material-symbols-outlined text-base text-slate-500 ml-auto">auto_awesome</span>
         </div>
       </div>
 
       {/* User */}
-      <div
-        className="px-4 py-4 flex items-center gap-3"
-        style={{ borderTop: "1px solid var(--forge-100)" }}
-      >
+      <div className="px-4 py-3 flex items-center gap-3 mt-1">
         <UserButton afterSignOutUrl="/sign-in" />
-        <span className="text-[12px] truncate" style={{ color: "var(--forge-400)" }}>
-          Mon compte
-        </span>
+        <span className="text-xs text-on-surface-variant truncate">Mon compte</span>
       </div>
-    </nav>
+    </aside>
   );
 }

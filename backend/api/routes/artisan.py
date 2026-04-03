@@ -46,6 +46,17 @@ class QAEntry(BaseModel):
 
 @router.post("", status_code=201)
 def create_artisan(payload: ArtisanCreate, db: Session = Depends(get_db)):
+    # Vérifier par clerk_user_id d'abord (évite la violation de contrainte UNIQUE → 500)
+    if payload.clerk_user_id:
+        existing_by_clerk = db.query(Artisan).filter(Artisan.clerk_user_id == payload.clerk_user_id).first()
+        if existing_by_clerk:
+            # Mise à jour silencieuse du config si renvoyé depuis l'onboarding
+            if payload.config_json:
+                existing_by_clerk.config_json = payload.config_json
+                db.commit()
+                db.refresh(existing_by_clerk)
+            return _artisan_to_dict(existing_by_clerk)
+
     existing = db.query(Artisan).filter(Artisan.email == payload.email).first()
     if existing:
         # Si l'enregistrement n'a pas encore de clerk_user_id, on le revendique

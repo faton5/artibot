@@ -2,36 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+/* ── Google Fonts ──────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 :root {
-  --forge-950: #08080a;
-  --forge-900: #111113;
-  --forge-800: #1e1e22;
-  --forge-700: #3a3a40;
-  --forge-600: #5a5a62;
-  --forge-500: #75757f;
-  --forge-400: #8e8e98;
-  --forge-300: #b0b0ba;
-  --forge-200: #d0d0d8;
-  --forge-100: #e8e8ef;
-  --forge-50:  #f2f2f7;
+  --sidebar-w: 256px;
 
-  --amber-700: #b45309;
-  --amber-600: #d97706;
-  --amber-500: #f59e0b;
-  --amber-400: #fbbf24;
-  --amber-100: #fef3c7;
-  --amber-50:  #fffbeb;
+  /* Stitch color tokens */
+  --primary:                  #904d00;
+  --primary-container:        #ff8c00;
+  --on-primary:               #ffffff;
+  --on-primary-container:     #623200;
+  --surface:                  #f8f9fa;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low:    #f3f4f5;
+  --surface-container:        #edeeef;
+  --surface-container-high:   #e7e8e9;
+  --on-surface:               #191c1d;
+  --on-surface-variant:       #564334;
+  --secondary:                #865224;
+  --secondary-container:      #fdb881;
+  --on-secondary-container:   #78471a;
+  --tertiary:                 #00658f;
+  --tertiary-container:       #00b5fc;
+  --on-tertiary-container:    #004360;
+  --error:                    #ba1a1a;
+  --error-container:          #ffdad6;
+  --on-error-container:       #93000a;
+  --outline:                  #897362;
+  --outline-variant:          #ddc1ae;
+  --on-background:            #191c1d;
+  --background:               #f8f9fa;
+}
 
-  --canvas:    #f7f6f3;
-  --surface:   #ffffff;
-  --sidebar-w: 240px;
-
-  --hot:  #ef4444;
-  --warm: #f97316;
-  --cold: #9ca3af;
+/* ── Material Symbols config ───────────────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
 }
 
 /* ── Base ──────────────────────────────────────────────────────── */
@@ -39,86 +48,120 @@
   * { box-sizing: border-box; }
 
   html {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background: var(--canvas);
-    color: var(--forge-900);
+    background: var(--background);
+    color: var(--on-surface);
   }
 
   ::selection {
-    background: #fbbf24;
-    color: #111113;
+    background: #ffdcc3;
+    color: #2f1500;
   }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ddc1ae; }
 }
 
 /* ── Component classes ─────────────────────────────────────────── */
 @layer components {
   /* Buttons */
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 cursor-pointer;
-    background: var(--forge-900);
-    color: #fff;
-    border: 1px solid var(--forge-900);
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 0 2px 8px rgba(144, 77, 0, 0.2);
   }
-  .btn-primary:hover  { background: var(--forge-700); border-color: var(--forge-700); }
-  .btn-primary:active { background: var(--forge-950); }
+  .btn-primary:hover { background: #7a4200; }
+  .btn-primary:active { transform: scale(0.98); }
 
-  .btn-amber {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 cursor-pointer;
-    background: #ea580c;
-    color: #fff;
-    border: 1px solid #ea580c;
+  .btn-cta {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-150 cursor-pointer;
+    background: linear-gradient(135deg, #904d00 0%, #ff8c00 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(144, 77, 0, 0.3);
   }
-  .btn-amber:hover  { background: #c2410c; border-color: #c2410c; }
+  .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(144, 77, 0, 0.35); }
+  .btn-cta:active { transform: scale(0.98); }
 
   .btn-outline {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 cursor-pointer;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer;
     background: transparent;
-    color: var(--forge-700);
-    border: 1px solid var(--forge-100);
+    color: var(--on-surface);
+    border: 1.5px solid var(--surface-container-high);
   }
-  .btn-outline:hover { background: var(--forge-50); border-color: var(--forge-200); }
+  .btn-outline:hover { background: var(--surface-container-low); }
 
   /* Inputs */
-  .forge-input {
-    @apply w-full px-3 py-2 text-[13px] rounded-lg outline-none transition-all;
-    background: var(--surface);
-    color: var(--forge-900);
-    border: 1px solid var(--forge-100);
-    font-family: 'DM Sans', sans-serif;
+  .artibot-input {
+    @apply w-full px-3 py-2.5 text-sm rounded-xl outline-none transition-all;
+    background: var(--surface-container-lowest);
+    color: var(--on-surface);
+    border: 1.5px solid var(--surface-container-high);
+    font-family: 'Inter', sans-serif;
   }
-  .forge-input:focus {
-    border-color: var(--forge-400);
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+  .artibot-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(144, 77, 0, 0.08);
   }
-  .forge-input::placeholder { color: var(--forge-300); }
+  .artibot-input::placeholder { color: var(--outline); }
+
+  /* Legacy alias */
+  .forge-input { @apply artibot-input; }
 
   /* Nav items */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-100 cursor-pointer;
-    color: var(--forge-600);
+    @apply flex items-center gap-3 px-4 py-3 text-[15px] font-medium transition-colors duration-100 cursor-pointer;
+    color: #475569;
   }
-  .nav-item:hover { background: var(--forge-50); color: var(--forge-900); }
+  .nav-item:hover { background: #e2e8f0; color: #1e293b; }
   .nav-item.active {
-    background: #fff7ed;
+    background: #ffffff;
     color: #c2410c;
     font-weight: 600;
+    border-left: 4px solid #c2410c;
+    padding-left: 12px;
+  }
+
+  /* Cards */
+  .artibot-card {
+    @apply rounded-xl;
+    background: var(--surface-container-lowest);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
   /* Score badges */
-  .score-hot  { background: #fef2f2; color: #dc2626; }
-  .score-warm { background: #fff7ed; color: #ea580c; }
-  .score-cold { background: var(--forge-50); color: var(--forge-500); }
+  .score-hot  { background: #ffdad6; color: #93000a; }
+  .score-warm { background: #ffdcc3; color: #623200; }
+  .score-cold { background: var(--surface-container-high); color: var(--on-surface-variant); }
 
-  /* Cards */
-  .card {
-    @apply rounded-2xl;
-    background: var(--surface);
-    border: 1px solid var(--forge-100);
+  /* Status badges */
+  .status-active    { background: #c7e7ff; color: #001e2e; }
+  .status-qualified { background: #fdb881; color: #2f1500; }
+  .status-escalated { background: #ffdad6; color: #93000a; }
+  .status-closed    { background: var(--surface-container-high); color: var(--on-surface-variant); }
+
+  /* Page layout helpers */
+  .page-header {
+    @apply flex-shrink-0 px-8 py-6;
+    background: var(--surface-container-lowest);
+    border-bottom: 1px solid var(--surface-container-high);
+  }
+
+  .page-title {
+    @apply text-xl font-headline font-extrabold tracking-tight;
+    color: var(--on-surface);
+  }
+
+  .page-subtitle {
+    @apply text-sm mt-0.5;
+    color: var(--on-surface-variant);
   }
 }
 
@@ -138,14 +181,10 @@
   50% { opacity: 0.35; }
 }
 
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
-}
-
-.animate-fade-up    { animation: fade-up  0.25s ease both; }
-.animate-fade-in    { animation: fade-in  0.2s  ease both; }
-.animate-pulse-dot  { animation: pulse-dot 2.5s ease-in-out infinite; }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+.animate-fade-up   { animation: fade-up  0.25s ease both; }
+.animate-fade-in   { animation: fade-in  0.2s  ease both; }
+.animate-pulse-dot { animation: pulse-dot 2.5s ease-in-out infinite; }
