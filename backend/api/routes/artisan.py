@@ -168,27 +168,45 @@ def gmail_callback(
     db: Session = Depends(get_db),
 ):
     """Callback OAuth Google — URI fixe, artisan_id extrait du state."""
+    # 1. Valider le state
     try:
         artisan_id_str, _ = state.split(":", 1)
         artisan_id = UUID(artisan_id_str)
     except (ValueError, AttributeError):
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="State OAuth invalide")
 
     artisan = _get_or_404(db, artisan_id)
 
-    flow = _gmail_flow(state=state)
-    flow.fetch_token(code=code)
+    # 2. Valider la configuration serveur
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        logger.error("Gmail callback: GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET manquant")
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/integrations?gmail=error&reason=config")
 
-    credentials = flow.credentials
-    token_data = {
-        "token": credentials.token,
-        "refresh_token": credentials.refresh_token,
-        "scopes": list(credentials.scopes or []),
-    }
+    if not settings.FERNET_KEY:
+        logger.error("Gmail callback: FERNET_KEY manquant")
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/integrations?gmail=error&reason=config")
 
-    f = Fernet(settings.FERNET_KEY.encode())
-    encrypted = f.encrypt(json.dumps(token_data).encode()).decode()
+    # 3. Échanger le code contre un token
+    try:
+        flow = _gmail_flow(state=state)
+        flow.fetch_token(code=code)
+    except Exception as exc:
+        logger.error(f"Gmail callback: échec fetch_token — {exc}", exc_info=True)
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/integrations?gmail=error&reason=oauth")
+
+    # 4. Chiffrer et sauvegarder
+    try:
+        credentials = flow.credentials
+        token_data = {
+            "token": credentials.token,
+            "refresh_token": credentials.refresh_token,
+            "scopes": list(credentials.scopes or []),
+        }
+        f = Fernet(settings.FERNET_KEY.encode())
+        encrypted = f.encrypt(json.dumps(token_data).encode()).decode()
+    except Exception as exc:
+        logger.error(f"Gmail callback: échec chiffrement token — {exc}", exc_info=True)
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/integrations?gmail=error&reason=encrypt")
 
     artisan.gmail_token_encrypted = encrypted
     db.commit()

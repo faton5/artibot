@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Navbar } from "@/components/Navbar";
 import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
@@ -14,8 +16,24 @@ const STATUS_CONFIG: Record<IntegrationStatus, { label: string; bg: string; colo
   soon:         { label: "Bientôt disponible", bg: "#e7e8e9", color: "#564334" },
 };
 
+const GMAIL_ERROR_MSG: Record<string, string> = {
+  config:  "Configuration Google OAuth incomplète sur le serveur. Contactez le support.",
+  oauth:   "Échec de l'autorisation Google. Vérifiez les credentials dans la Google Console.",
+  encrypt: "Erreur de chiffrement du token. Vérifiez la variable FERNET_KEY.",
+};
+
 export default function IntegrationsPage() {
   const { artisanId } = useCurrentArtisan();
+  const searchParams = useSearchParams();
+  const [gmailError, setGmailError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const error = searchParams.get("gmail");
+    const reason = searchParams.get("reason");
+    if (error === "error" && reason) {
+      setGmailError(GMAIL_ERROR_MSG[reason] ?? "Erreur inconnue lors de la connexion Gmail.");
+    }
+  }, [searchParams]);
   const { data: artisan, isLoading, mutate } = useSWR(
     artisanId ? ["artisan", artisanId] : null,
     () => artisanApi.get(artisanId as string),
@@ -69,6 +87,20 @@ export default function IntegrationsPage() {
             <h1 className="text-2xl font-extrabold font-headline tracking-tight" style={{ color: "#191c1d" }}>Intégrations</h1>
             <p className="text-sm mt-1" style={{ color: "#564334" }}>Canaux de communication connectés à votre assistant</p>
           </div>
+
+          {/* Erreur Gmail OAuth */}
+          {gmailError && (
+            <div className="p-4 rounded-2xl mb-4 flex items-start gap-3" style={{ background: "#ffdad6" }}>
+              <span className="material-symbols-outlined flex-shrink-0 mt-0.5" style={{ color: "#93000a" }}>error</span>
+              <div>
+                <p className="text-sm font-bold mb-0.5" style={{ color: "#93000a" }}>Connexion Gmail échouée</p>
+                <p className="text-xs" style={{ color: "#93000a" }}>{gmailError}</p>
+              </div>
+              <button className="ml-auto" onClick={() => setGmailError(null)}>
+                <span className="material-symbols-outlined text-sm" style={{ color: "#93000a" }}>close</span>
+              </button>
+            </div>
+          )}
 
           {/* Info banner */}
           <div className="p-4 rounded-2xl mb-6 flex items-center gap-3" style={{ background: "#c7e7ff" }}>

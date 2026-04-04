@@ -33,9 +33,9 @@ export default function SignUpPage() {
       />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-[420px] mx-4">
+      <div className="relative z-10 w-full max-w-[440px] mx-4">
         <div
-          className="rounded-3xl px-8 py-9 shadow-2xl"
+          className="rounded-3xl px-8 py-9 shadow-2xl overflow-hidden"
           style={{
             background: "rgba(255,255,255,0.97)",
             backdropFilter: "blur(24px)",
