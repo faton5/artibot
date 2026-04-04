@@ -112,6 +112,7 @@ class GmailChannel(BaseChannel):
         sender = headers.get("From", "")
         subject = headers.get("Subject", "")
         thread_id = msg.get("threadId", "")
+        email_message_id = headers.get("Message-ID", "")  # vrai ID RFC822 pour le threading
 
         # Extrait le corps du message
         body = self._extract_body(msg["payload"])
@@ -124,6 +125,7 @@ class GmailChannel(BaseChannel):
             subject=subject,
             thread_id=thread_id,
             message_id=msg_id,
+            email_message_id=email_message_id,
             artisan_email=email_address,
         )
 
@@ -154,9 +156,11 @@ class GmailChannel(BaseChannel):
         msg = MIMEMultipart("alternative")
         msg["To"] = to
         msg["Subject"] = context.get("subject", "Re: Votre demande")
-        if context.get("thread_id"):
-            msg["References"] = context.get("message_id", "")
-            msg["In-Reply-To"] = context.get("message_id", "")
+        # Utilise le vrai Message-ID RFC822 pour s'accrocher au bon thread
+        email_msg_id = context.get("email_message_id", "")
+        if email_msg_id:
+            msg["In-Reply-To"] = email_msg_id
+            msg["References"] = email_msg_id
 
         part = MIMEText(content, "plain", "utf-8")
         msg.attach(part)

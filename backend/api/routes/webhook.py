@@ -247,6 +247,7 @@ async def gmail_webhook(request: Request, db: Session = Depends(get_db)):
     context = {
         "thread_id": message.thread_id,
         "message_id": message.message_id,
+        "email_message_id": message.email_message_id,
         "subject": f"Re: {message.subject}" if message.subject else "Re: Votre demande",
     }
 

@@ -245,9 +245,11 @@ async def poll_gmail(artisan_id: UUID, max_results: int = 5, db: Session = Depen
             # Tronque à 6000 caractères max pour éviter le dépassement de tokens embedding
             body = body[:6000]
 
+            email_message_id = headers.get("Message-ID", "")
             context = {
                 "thread_id": thread_id,
                 "message_id": m["id"],
+                "email_message_id": email_message_id,
                 "subject": f"Re: {subject}",
             }
 

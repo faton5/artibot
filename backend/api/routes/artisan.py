@@ -238,6 +238,20 @@ def gmail_disconnect(artisan_id: UUID, db: Session = Depends(get_db)):
     return {"status": "disconnected"}
 
 
+@router.delete("/{artisan_id}/prospects/{prospect_id}", status_code=204)
+def delete_prospect(artisan_id: UUID, prospect_id: UUID, db: Session = Depends(get_db)):
+    _get_or_404(db, artisan_id)
+    from backend.models.database import Prospect
+    prospect = db.query(Prospect).filter(
+        Prospect.id == prospect_id,
+        Prospect.artisan_id == artisan_id,
+    ).first()
+    if not prospect:
+        raise HTTPException(status_code=404, detail="Prospect non trouvé")
+    db.delete(prospect)
+    db.commit()
+
+
 # ── Base de connaissances ──────────────────────────────────────────────────────
 
 @router.post("/{artisan_id}/knowledge/upload")

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
 import { prospectApi, conversationApi } from "@/lib/api";
@@ -32,6 +34,21 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function ProspectDetailPage({ params }: Props) {
   const { artisanId } = useCurrentArtisan();
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!artisanId) return;
+    if (!confirm("Supprimer ce prospect ? Cette action est irréversible.")) return;
+    setDeleting(true);
+    try {
+      await prospectApi.delete(artisanId, params.id);
+      router.push("/prospects");
+    } catch (e: any) {
+      alert(e.message);
+      setDeleting(false);
+    }
+  };
 
   const { data: prospects = [], isLoading: loadingProspects } = useSWR(
     artisanId ? ["prospects", artisanId] : null,
@@ -94,6 +111,12 @@ export default function ProspectDetailPage({ params }: Props) {
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Retour aux Prospects
           </Link>
+          <button onClick={handleDelete} disabled={deleting}
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: "#ffdad6", color: "#93000a" }}>
+            <span className="material-symbols-outlined text-sm">delete</span>
+            {deleting ? "Suppression…" : "Supprimer"}
+          </button>
         </header>
 
         <div className="p-8 grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 max-w-6xl mx-auto">

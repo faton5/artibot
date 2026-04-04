@@ -9,10 +9,11 @@ class Message:
     content: str          # corps du message
     channel: str          # "email" | "sms" | "whatsapp"
     raw_payload: dict = field(default_factory=dict)
-    subject: Optional[str] = None      # pour email
-    thread_id: Optional[str] = None    # pour email (thread Gmail)
-    message_id: Optional[str] = None   # ID du message dans le canal
-    artisan_email: Optional[str] = None  # email de l'artisan destinataire
+    subject: Optional[str] = None          # pour email
+    thread_id: Optional[str] = None        # pour email (thread Gmail)
+    message_id: Optional[str] = None       # ID Gmail interne (ex: 19d58xxx)
+    email_message_id: Optional[str] = None # vrai Message-ID RFC822 (ex: <xxx@mail.gmail.com>)
+    artisan_email: Optional[str] = None    # email de l'artisan destinataire
 
 
 class BaseChannel(ABC):

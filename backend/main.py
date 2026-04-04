@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -21,10 +22,15 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Initialisation et cleanup au démarrage/arrêt."""
     logger.info("ArtiBot backend démarrage...")
-    # Crée les tables si elles n'existent pas (en prod, utiliser les migrations SQL)
     Base.metadata.create_all(bind=engine)
     logger.info("Base de données initialisée")
+
+    from backend.services.gmail_poller import gmail_polling_loop
+    poller_task = asyncio.create_task(gmail_polling_loop())
+
     yield
+
+    poller_task.cancel()
     logger.info("ArtiBot backend arrêt")
 
 

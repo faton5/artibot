@@ -110,6 +110,8 @@ export const knowledgeApi = {
 export const prospectApi = {
   list: (artisanId: string) =>
     apiFetch<ProspectWithConversation[]>(`/api/artisans/${artisanId}/prospects`),
+  delete: (artisanId: string, prospectId: string) =>
+    apiFetch<void>(`/api/artisans/${artisanId}/prospects/${prospectId}`, { method: "DELETE" }),
 };
 
 // ── Reports ───────────────────────────────────────────────────────────────────
