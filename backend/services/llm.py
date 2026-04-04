@@ -44,9 +44,9 @@ Ne pose pas toutes les questions en même temps. Sois naturel.
 
 ## Format de réponse
 Réponds UNIQUEMENT en JSON valide avec cette structure exacte :
-{
+{{
   "response": "le message à envoyer au prospect",
-  "prospect_data": {
+  "prospect_data": {{
     "name": null,
     "phone": null,
     "email": null,
@@ -55,10 +55,10 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte :
     "location": null,
     "budget": null,
     "delay": null
-  },
+  }},
   "score": "cold",
   "score_reason": "explication courte du score"
-}
+}}
 
 Valeurs possibles pour score :
 - cold : demande vague, pas de projet défini

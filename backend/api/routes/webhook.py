@@ -82,9 +82,13 @@ async def _process_message(
     messages.append({"from": "prospect", "content": content, "channel": channel_name})
     conversation.messages_json = messages
 
-    # 3. RAG search
+    # 3. RAG search (non-bloquant — continue sans contexte si l'embedding échoue)
     rag_service = RAGService(db)
-    rag_chunks = await rag_service.search(str(artisan.id), content, top_k=5)
+    try:
+        rag_chunks = await rag_service.search(str(artisan.id), content, top_k=5)
+    except Exception as rag_err:
+        logger.warning(f"RAG search échoué, conversation sans contexte : {rag_err}")
+        rag_chunks = []
 
     # 4. Config artisan
     artisan_config = {
