@@ -1,9 +1,13 @@
 import json
 import logging
+import os
 import secrets
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+
+# Google renvoie parfois des scopes supplémentaires (openid, userinfo.*) — on accepte
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
