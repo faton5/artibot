@@ -18,12 +18,14 @@ export default function SettingsPage() {
   );
 
   const [config, setConfig] = useState<ArtisanConfig>({});
+  const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (artisan?.config_json && Object.keys(config).length === 0) {
-      setConfig(artisan.config_json);
+    if (artisan) {
+      if (Object.keys(config).length === 0) setConfig(artisan.config_json ?? {});
+      if (!name) setName(artisan.name ?? "");
     }
   }, [artisan]);
 
@@ -31,7 +33,7 @@ export default function SettingsPage() {
     if (!artisanId) return;
     setSaving(true);
     try {
-      await artisanApi.update(artisanId, { config_json: config });
+      await artisanApi.update(artisanId, { name, config_json: config });
       await mutate();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -111,7 +113,8 @@ export default function SettingsPage() {
               {/* Account section */}
               <Section icon="person" title="Compte" description="Informations du profil">
                 <Field label="Nom" htmlFor="name">
-                  <input id="name" value={artisan?.name ?? ""} disabled style={{ ...inputStyle, opacity: 0.6 }} />
+                  <input id="name" value={name} onChange={(e) => setName(e.target.value)}
+                    placeholder="Jean Dupont" style={inputStyle} />
                 </Field>
                 <Field label="Email" htmlFor="email" className="mt-4">
                   <input id="email" value={artisan?.email ?? ""} disabled style={{ ...inputStyle, opacity: 0.6 }} />

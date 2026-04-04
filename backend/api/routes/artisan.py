@@ -212,7 +212,18 @@ def gmail_callback(
         logger.error(f"Gmail callback: échec chiffrement token — {exc}", exc_info=True)
         return RedirectResponse(url=f"{settings.FRONTEND_URL}/integrations?gmail=error&reason=encrypt")
 
+    # 5. Extraire l'email Gmail depuis l'id_token (scope openid inclus par Google)
+    gmail_email = None
+    try:
+        id_token = getattr(credentials, "id_token", None)
+        if isinstance(id_token, dict):
+            gmail_email = id_token.get("email")
+    except Exception:
+        pass
+
     artisan.gmail_token_encrypted = encrypted
+    if gmail_email:
+        artisan.gmail_email = gmail_email
     db.commit()
 
     return RedirectResponse(url=f"{settings.FRONTEND_URL}/settings?gmail=connected")
@@ -222,6 +233,7 @@ def gmail_callback(
 def gmail_disconnect(artisan_id: UUID, db: Session = Depends(get_db)):
     artisan = _get_or_404(db, artisan_id)
     artisan.gmail_token_encrypted = None
+    artisan.gmail_email = None
     db.commit()
     return {"status": "disconnected"}
 
@@ -382,6 +394,7 @@ def _artisan_to_dict(artisan: Artisan) -> dict:
         "email": artisan.email,
         "config_json": artisan.config_json,
         "gmail_connected": artisan.gmail_token_encrypted is not None,
+        "gmail_email": artisan.gmail_email,
         "twilio_number": artisan.twilio_number,
         "created_at": artisan.created_at.isoformat() if artisan.created_at else None,
     }

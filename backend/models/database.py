@@ -17,6 +17,7 @@ class Artisan(Base):
     clerk_user_id = Column(String(255), nullable=True, unique=True, index=True)
     config_json = Column(JSONB, default={})
     gmail_token_encrypted = Column(Text, nullable=True)
+    gmail_email = Column(String(255), nullable=True)
     twilio_number = Column(String(20), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

@@ -127,7 +127,7 @@ export default function IntegrationsPage() {
                 name="Gmail"
                 description={
                   artisan?.gmail_connected
-                    ? `Connecté via ${artisan.email}`
+                    ? `Connecté via ${artisan.gmail_email ?? artisan.email}`
                     : "Connectez votre boîte Gmail pour que le bot réponde automatiquement aux emails de vos prospects."
                 }
                 status={gmailStatus}

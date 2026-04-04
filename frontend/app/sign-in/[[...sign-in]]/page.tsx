@@ -4,52 +4,33 @@ export default function SignInPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+      style={{
+        fontFamily: "'Inter', system-ui, sans-serif",
+        background: "radial-gradient(ellipse at 50% -10%, rgba(144,77,0,0.12) 0%, #f8f9fa 55%)",
+      }}
     >
-      {/* Background — workshop warm gradient (identique à sign-up) */}
+      {/* Warm glow */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background:
-            "linear-gradient(135deg, #1a0d00 0%, #7a3b00 45%, #2e1500 100%)",
-        }}
-      />
-      {/* Warm glow radial */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at 65% 35%, rgba(255,140,0,0.30) 0%, rgba(255,90,0,0.10) 40%, transparent 70%)",
-        }}
-      />
-      {/* Subtle texture dots */}
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(255,220,180,0.15) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
+          background: "radial-gradient(ellipse at 80% 80%, rgba(255,140,0,0.06) 0%, transparent 60%)",
         }}
       />
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-[440px] mx-4">
         <div
-          className="rounded-3xl px-8 py-9 shadow-2xl overflow-hidden"
+          className="rounded-3xl px-8 py-9 shadow-xl overflow-hidden"
           style={{
-            background: "rgba(255,255,255,0.97)",
-            backdropFilter: "blur(24px)",
-            boxShadow: "0 24px 80px rgba(0,0,0,0.45)",
+            background: "#ffffff",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.10)",
           }}
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-7">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 shadow-md"
-              style={{
-                background:
-                  "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)",
-              }}
+              style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)" }}
             >
               <span
                 className="material-symbols-outlined text-white text-2xl"
@@ -58,10 +39,7 @@ export default function SignInPage() {
                 handyman
               </span>
             </div>
-            <span
-              className="font-headline font-black text-2xl tracking-tight"
-              style={{ color: "#191c1d" }}
-            >
+            <span className="font-headline font-black text-2xl tracking-tight" style={{ color: "#191c1d" }}>
               ArtiBot
             </span>
             <p className="text-xs mt-1" style={{ color: "#897362" }}>
@@ -70,10 +48,7 @@ export default function SignInPage() {
           </div>
 
           <div className="text-center mb-6">
-            <h1
-              className="text-xl font-extrabold font-headline"
-              style={{ color: "#191c1d" }}
-            >
+            <h1 className="text-xl font-extrabold font-headline" style={{ color: "#191c1d" }}>
               Heureux de vous revoir
             </h1>
             <p className="text-sm mt-1" style={{ color: "#564334" }}>
@@ -135,17 +110,10 @@ export default function SignInPage() {
               { icon: "lock", text: "Sécurisé" },
               { icon: "check_circle", text: "Gratuit 14 jours" },
             ].map(({ icon, text }) => (
-              <div
-                key={text}
-                className="flex items-center gap-1.5 text-xs"
-                style={{ color: "#897362" }}
-              >
+              <div key={text} className="flex items-center gap-1.5 text-xs" style={{ color: "#897362" }}>
                 <span
                   className="material-symbols-outlined text-sm"
-                  style={{
-                    color: "#904d00",
-                    fontVariationSettings: "'FILL' 1",
-                  }}
+                  style={{ color: "#904d00", fontVariationSettings: "'FILL' 1" }}
                 >
                   {icon}
                 </span>

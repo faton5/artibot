@@ -40,6 +40,7 @@ export interface Artisan {
   email: string;
   config_json: ArtisanConfig;
   gmail_connected: boolean;
+  gmail_email: string | null;
   twilio_number: string | null;
   created_at: string;
 }
