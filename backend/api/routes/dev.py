@@ -202,6 +202,15 @@ async def poll_gmail(artisan_id: UUID, max_results: int = 5, db: Session = Depen
         logger.error(f"poll-gmail: erreur liste messages — {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Erreur Gmail API : {e}")
 
+    # Patterns d'expéditeurs automatiques à ignorer
+    AUTOMATED_PATTERNS = [
+        "noreply", "no-reply", "donotreply", "do-not-reply",
+        "newsletter", "notifications@", "notify@", "alerts@",
+        "mailer@", "bounce@", "postmaster@", "marketing@",
+        "info@fnac", "fdj@", "surveys@members", "actu.fdj",
+        "mail.nintendo", "mail.trae", "@revolut.com",
+    ]
+
     messages_raw = result.get("messages", [])
     if not messages_raw:
         return {"status": "ok", "processed": 0, "detail": "Aucun email non lu dans la boîte."}
@@ -215,10 +224,26 @@ async def poll_gmail(artisan_id: UUID, max_results: int = 5, db: Session = Depen
             subject = headers.get("Subject", "(sans objet)")
             thread_id = msg.get("threadId", "")
 
+            # Ignore les emails automatiques / newsletters
+            sender_lower = sender.lower()
+            if any(p in sender_lower for p in AUTOMATED_PATTERNS):
+                await channel.mark_as_read(m["id"])
+                processed.append({"message_id": m["id"], "status": "skipped", "reason": f"expéditeur automatique : {sender}"})
+                continue
+
+            # Ignore si List-Unsubscribe présent (newsletter)
+            if headers.get("List-Unsubscribe") or headers.get("List-ID"):
+                await channel.mark_as_read(m["id"])
+                processed.append({"message_id": m["id"], "status": "skipped", "reason": "newsletter détectée"})
+                continue
+
             body = channel._extract_body(msg["payload"])
             if not body.strip():
                 processed.append({"message_id": m["id"], "status": "skipped", "reason": "corps vide"})
                 continue
+
+            # Tronque à 6000 caractères max pour éviter le dépassement de tokens embedding
+            body = body[:6000]
 
             context = {
                 "thread_id": thread_id,

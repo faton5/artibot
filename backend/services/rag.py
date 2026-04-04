@@ -35,6 +35,8 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
 def get_query_embedding(query: str) -> list[float]:
     """Génère un embedding de requête via OpenAI text-embedding-3-small (1024 dims)."""
     client = _get_openai_client()
+    # Tronque à ~24000 caractères (~6000 tokens) pour rester sous la limite de 8192 tokens
+    query = query[:24000]
     response = client.embeddings.create(
         input=[query],
         model="text-embedding-3-small",
