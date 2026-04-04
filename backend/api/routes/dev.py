@@ -245,6 +245,13 @@ async def poll_gmail(artisan_id: UUID, max_results: int = 5, db: Session = Depen
             # Tronque à 6000 caractères max pour éviter le dépassement de tokens embedding
             body = body[:6000]
 
+            # Ignore les emails hors-sujet (pas de mot-clé prospect)
+            from backend.services.gmail_poller import _is_prospect_email
+            if not _is_prospect_email(subject, body):
+                await channel.mark_as_read(m["id"])
+                processed.append({"message_id": m["id"], "status": "skipped", "reason": f"hors-sujet : {subject[:60]}"})
+                continue
+
             email_message_id = headers.get("Message-ID", "")
             context = {
                 "thread_id": thread_id,

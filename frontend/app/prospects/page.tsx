@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useCurrentArtisan } from "@/hooks/useCurrentArtisan";
 import { prospectApi } from "@/lib/api";
+import { mutate as globalMutate } from "swr";
 import type { ProspectScore, ConversationStatus, Channel } from "@/types";
 
 const SCORE_CONFIG: Record<ProspectScore, { label: string; bg: string; color: string; icon: string }> = {
@@ -35,6 +36,7 @@ function formatDate(iso: string | null) {
 export default function ProspectsPage() {
   const { artisanId, isLoading: artisanLoading } = useCurrentArtisan();
   const [scoreFilter, setScoreFilter] = useState<ProspectScore | "">("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [channelFilter, setChannelFilter] = useState<Channel | "">("");
   const [search, setSearch] = useState("");
 
@@ -43,6 +45,22 @@ export default function ProspectsPage() {
     () => prospectApi.list(artisanId as string),
     { revalidateOnFocus: false }
   );
+
+  const handleDelete = async (e: React.MouseEvent, prospectId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!artisanId) return;
+    if (!confirm("Supprimer ce prospect ? Cette action est irréversible.")) return;
+    setDeletingId(prospectId);
+    try {
+      await prospectApi.delete(artisanId, prospectId);
+      globalMutate(["prospects", artisanId]);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = prospects.filter((p) => {
     if (scoreFilter && p.score !== scoreFilter) return false;
@@ -196,15 +214,15 @@ export default function ProspectsPage() {
                     return (
                       <tr key={p.id} style={{ borderBottom: i < filtered.length - 1 ? "1px solid #f3f4f5" : "none" }}>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
+                          <Link href={`/prospects/${p.id}`} className="flex items-center gap-3 group">
                             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: "#ffdcc3", color: "#623200" }}>
                               {initials}
                             </div>
                             <div>
-                              <p className="text-sm font-semibold" style={{ color: "#191c1d" }}>{p.name || "Inconnu"}</p>
+                              <p className="text-sm font-semibold group-hover:underline" style={{ color: "#191c1d" }}>{p.name || "Inconnu"}</p>
                               <p className="text-xs" style={{ color: "#564334" }}>{p.email || p.phone || "—"}</p>
                             </div>
-                          </div>
+                          </Link>
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold" style={{ background: score.bg, color: score.color }}>
@@ -242,14 +260,26 @@ export default function ProspectsPage() {
                           ) : <span className="text-sm" style={{ color: "#897362" }}>—</span>}
                         </td>
                         <td className="px-4 py-3">
-                          {conv && (
-                            <Link href={`/dashboard/${conv.id}`}
-                              className="inline-flex items-center gap-1 text-sm font-semibold transition-colors"
-                              style={{ color: "#904d00" }}>
-                              Voir
-                              <span className="material-symbols-outlined text-sm">chevron_right</span>
-                            </Link>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {conv && (
+                              <Link href={`/dashboard/${conv.id}`}
+                                className="inline-flex items-center gap-1 text-sm font-semibold transition-colors"
+                                style={{ color: "#904d00" }}>
+                                Voir
+                                <span className="material-symbols-outlined text-sm">chevron_right</span>
+                              </Link>
+                            )}
+                            <button
+                              onClick={(e) => handleDelete(e, p.id)}
+                              disabled={deletingId === p.id}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                              style={{ color: "#93000a" }}
+                              title="Supprimer">
+                              <span className="material-symbols-outlined text-sm">
+                                {deletingId === p.id ? "hourglass_empty" : "delete"}
+                              </span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

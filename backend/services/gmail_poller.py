@@ -22,6 +22,24 @@ AUTOMATED_PATTERNS = [
     "mailer@", "bounce@", "postmaster@", "marketing@",
 ]
 
+# Mots-clés indiquant un email de prospect (au moins un doit être présent)
+PROSPECT_KEYWORDS = [
+    "devis", "travaux", "rénovation", "renovation", "installation",
+    "réparation", "reparation", "chantier", "intervention", "urgence",
+    "plomberie", "électricité", "electricite", "peinture", "carrelage",
+    "maçonnerie", "maconnerie", "toiture", "isolation", "chauffage",
+    "climatisation", "menuiserie", "plâtrerie", "platrerie", "façade",
+    "facade", "cuisine", "salle de bain", "contact", "demande",
+    "disponible", "disponibilité", "tarif", "prix", "budget",
+    "renseignement", "information", "projet", "surface", "m²", "m2",
+]
+
+
+def _is_prospect_email(subject: str, body: str) -> bool:
+    """Vérifie si l'email contient au moins un mot-clé prospect."""
+    text = (subject + " " + body[:2000]).lower()
+    return any(kw in text for kw in PROSPECT_KEYWORDS)
+
 
 async def _poll_artisan(artisan: Artisan, db: Session) -> int:
     """Traite les emails non lus d'un artisan. Retourne le nombre traité."""
@@ -66,6 +84,12 @@ async def _poll_artisan(artisan: Artisan, db: Session) -> int:
                 continue
 
             body = body[:6000]
+
+            # Ignore les emails sans mot-clé prospect
+            if not _is_prospect_email(subject, body):
+                await channel.mark_as_read(m["id"])
+                logger.debug(f"gmail_poller: ignoré (hors-sujet) — {subject[:60]}")
+                continue
 
             context = {
                 "thread_id": thread_id,
