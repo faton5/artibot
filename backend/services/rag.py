@@ -16,47 +16,31 @@ CHUNK_OVERLAP = 50
 EMBEDDING_DIM = 1024
 
 
-def _get_embedding_client():
-    """Retourne le client d'embedding configuré (OpenAI ou Voyage AI)."""
-    if settings.VOYAGE_API_KEY:
-        import voyageai
-        return "voyage", voyageai.Client(api_key=settings.VOYAGE_API_KEY)
-    elif settings.OPENAI_API_KEY:
-        from openai import OpenAI
-        return "openai", OpenAI(api_key=settings.OPENAI_API_KEY)
-    else:
-        raise ValueError("Aucune clé API d'embedding configurée (VOYAGE_API_KEY ou OPENAI_API_KEY)")
+def _get_openai_client():
+    from openai import OpenAI
+    return OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 def get_embeddings(texts: list[str]) -> list[list[float]]:
-    """Génère des embeddings pour une liste de textes."""
-    provider, client = _get_embedding_client()
-
-    if provider == "voyage":
-        result = client.embed(texts, model="voyage-2", input_type="document")
-        return result.embeddings
-
-    elif provider == "openai":
-        response = client.embeddings.create(
-            input=texts,
-            model="text-embedding-3-small",
-        )
-        return [item.embedding for item in response.data]
+    """Génère des embeddings via OpenAI text-embedding-3-small (1024 dims)."""
+    client = _get_openai_client()
+    response = client.embeddings.create(
+        input=texts,
+        model="text-embedding-3-small",
+        dimensions=EMBEDDING_DIM,
+    )
+    return [item.embedding for item in response.data]
 
 
 def get_query_embedding(query: str) -> list[float]:
-    """Génère un embedding pour une requête de recherche."""
-    provider, client = _get_embedding_client()
-
-    if provider == "voyage":
-        result = client.embed([query], model="voyage-2", input_type="query")
-        return result.embeddings[0]
-    elif provider == "openai":
-        response = client.embeddings.create(
-            input=[query],
-            model="text-embedding-3-small",
-        )
-        return response.data[0].embedding
+    """Génère un embedding de requête via OpenAI text-embedding-3-small (1024 dims)."""
+    client = _get_openai_client()
+    response = client.embeddings.create(
+        input=[query],
+        model="text-embedding-3-small",
+        dimensions=EMBEDDING_DIM,
+    )
+    return response.data[0].embedding
 
 
 def extract_text_from_pdf(file_content: bytes) -> str:
