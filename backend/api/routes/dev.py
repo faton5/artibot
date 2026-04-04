@@ -1,7 +1,12 @@
 """
-Endpoint de seed pour données de test — à ne pas exposer en production.
-Usage : POST /api/dev/seed?artisan_id=<uuid>
+Endpoints de test/dev — à ne pas exposer en production.
+Usage :
+  POST /api/dev/seed?artisan_id=<uuid>
+  POST /api/dev/poll-gmail?artisan_id=<uuid>
 """
+import base64
+import json
+import logging
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -11,8 +16,10 @@ from sqlalchemy.orm import Session
 from backend.config import settings
 from backend.database import get_db
 from backend.models.database import Artisan, Prospect, Conversation
+from backend.services.channels.gmail import GmailChannel
 
 router = APIRouter(prefix="/api/dev", tags=["dev"])
+logger = logging.getLogger(__name__)
 
 FAKE_PROSPECTS = [
     {
@@ -165,3 +172,75 @@ def seed_prospects(artisan_id: UUID, db: Session = Depends(get_db)):
 
     db.commit()
     return {"status": "ok", "prospects_created": created}
+
+
+@router.post("/poll-gmail")
+async def poll_gmail(artisan_id: UUID, max_results: int = 5, db: Session = Depends(get_db)):
+    """
+    Poll manuel Gmail : récupère les N derniers emails non lus et les traite via le pipeline IA.
+    Utile pour tester sans configurer Google Pub/Sub.
+    Usage : POST /api/dev/poll-gmail?artisan_id=<uuid>&max_results=5
+    """
+    from backend.api.routes.webhook import _process_message
+
+    artisan = db.query(Artisan).filter(Artisan.id == artisan_id).first()
+    if not artisan:
+        raise HTTPException(status_code=404, detail="Artisan non trouvé")
+    if not artisan.gmail_token_encrypted:
+        raise HTTPException(status_code=400, detail="Gmail non connecté pour cet artisan")
+
+    channel = GmailChannel(str(artisan.id), artisan.gmail_token_encrypted)
+
+    try:
+        service = channel._get_service()
+        result = service.users().messages().list(
+            userId="me",
+            labelIds=["INBOX", "UNREAD"],
+            maxResults=max_results,
+        ).execute()
+    except Exception as e:
+        logger.error(f"poll-gmail: erreur liste messages — {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erreur Gmail API : {e}")
+
+    messages_raw = result.get("messages", [])
+    if not messages_raw:
+        return {"status": "ok", "processed": 0, "detail": "Aucun email non lu dans la boîte."}
+
+    processed = []
+    for m in messages_raw:
+        try:
+            msg = service.users().messages().get(userId="me", id=m["id"], format="full").execute()
+            headers = {h["name"]: h["value"] for h in msg["payload"].get("headers", [])}
+            sender = headers.get("From", "inconnu@example.com")
+            subject = headers.get("Subject", "(sans objet)")
+            thread_id = msg.get("threadId", "")
+
+            body = channel._extract_body(msg["payload"])
+            if not body.strip():
+                processed.append({"message_id": m["id"], "status": "skipped", "reason": "corps vide"})
+                continue
+
+            context = {
+                "thread_id": thread_id,
+                "message_id": m["id"],
+                "subject": f"Re: {subject}",
+            }
+
+            result_proc = await _process_message(
+                db=db,
+                artisan=artisan,
+                sender=sender,
+                content=body,
+                channel_name="email",
+                channel_context=context,
+                channel_instance=channel,
+            )
+
+            await channel.mark_as_read(m["id"])
+            processed.append({"message_id": m["id"], "sender": sender, "subject": subject, **result_proc})
+
+        except Exception as e:
+            logger.error(f"poll-gmail: erreur traitement message {m['id']} — {e}", exc_info=True)
+            processed.append({"message_id": m["id"], "status": "error", "detail": str(e)})
+
+    return {"status": "ok", "processed": len(processed), "results": processed}
