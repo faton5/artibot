@@ -56,13 +56,13 @@ export default function Home() {
                 Essayer gratuitement
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
-              <Link
-                href="/dashboard"
+              <a
+                href="#how-it-works"
                 className="px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition-all"
                 style={{ background: "#ffffff", color: "#191c1d", border: "2px solid #e7e8e9" }}
               >
                 Voir la démo
-              </Link>
+              </a>
             </div>
             <div className="flex items-center gap-4 pt-4">
               <div className="flex -space-x-3">

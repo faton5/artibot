@@ -14,7 +14,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
-    <ClerkProvider nonce={nonce} dynamic>
+    <ClerkProvider
+      nonce={nonce}
+      dynamic
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/dashboard"
+      afterSignUpUrl="/onboarding"
+    >
       <html lang="fr" className="light">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />

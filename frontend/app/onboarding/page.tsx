@@ -22,6 +22,7 @@ export default function OnboardingPage() {
   const { user } = useUser();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -89,7 +90,7 @@ export default function OnboardingPage() {
         },
       });
       localStorage.setItem("artisan_id", artisan.id);
-      router.push("/settings?onboarding=done");
+      setSuccess(true);
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -108,6 +109,64 @@ export default function OnboardingPage() {
     fontFamily: "'Inter', sans-serif",
     outline: "none",
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#f3f4f5" }}>
+        <div className="w-full max-w-lg text-center">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl"
+            style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)" }}>
+            <span className="material-symbols-outlined text-white text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+          </div>
+          <h1 className="text-4xl font-extrabold font-headline tracking-tight mb-3" style={{ color: "#191c1d" }}>
+            Votre assistant est prêt !
+          </h1>
+          <p className="text-base mb-10" style={{ color: "#564334" }}>
+            ArtiBot est configuré et prêt à répondre à vos prospects 24h/24.
+          </p>
+
+          <div className="rounded-3xl p-8 mb-8 text-left space-y-5" style={{ background: "#ffffff", boxShadow: "0 4px 24px rgba(25,28,29,0.06)" }}>
+            {[
+              { icon: "person", label: "Profil artisan", desc: "Vos informations métier ont été enregistrées." },
+              { icon: "robot", label: "ArtiBot actif", desc: "Votre assistant IA est prêt à qualifier vos prospects." },
+              { icon: "lock", label: "Données sécurisées", desc: "Vos données sont chiffrées et hébergées en France." },
+            ].map(({ icon, label, desc }) => (
+              <div key={label} className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(144,77,0,0.1)" }}>
+                  <span className="material-symbols-outlined text-base" style={{ color: "#904d00", fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="font-bold text-sm" style={{ color: "#191c1d" }}>{label}</p>
+                    <span className="material-symbols-outlined text-sm" style={{ color: "#904d00", fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  </div>
+                  <p className="text-xs" style={{ color: "#564334" }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)", boxShadow: "0 4px 12px rgba(144,77,0,0.25)" }}>
+              <span className="material-symbols-outlined text-base">dashboard</span>
+              Accéder au tableau de bord
+            </button>
+            <button
+              onClick={() => router.push("/integrations")}
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold"
+              style={{ background: "#ffffff", color: "#191c1d", border: "1.5px solid #e7e8e9" }}>
+              <span className="material-symbols-outlined text-base" style={{ color: "#904d00" }}>mail</span>
+              Connecter Gmail
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#f3f4f5" }}>

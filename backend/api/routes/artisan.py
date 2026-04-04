@@ -143,6 +143,8 @@ def _gmail_flow(artisan_id: str | None = None, state: str | None = None):
 @router.post("/{artisan_id}/gmail/connect")
 def gmail_connect(artisan_id: UUID, db: Session = Depends(get_db)):
     """Génère l'URL OAuth Google pour connecter Gmail."""
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=503, detail="Configuration Google OAuth manquante sur le serveur")
     _get_or_404(db, artisan_id)
 
     flow = _gmail_flow()

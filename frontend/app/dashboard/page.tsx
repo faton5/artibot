@@ -257,7 +257,19 @@ export default function DashboardPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
-                                <h3 className="font-headline font-bold text-slate-900 truncate">{name}</h3>
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <h3 className="font-headline font-bold text-slate-900 truncate">{name}</h3>
+                                  {c.prospect?.id && (
+                                    <Link
+                                      href={`/prospects/${c.prospect.id}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors hover:bg-orange-100"
+                                      title="Voir la fiche prospect"
+                                    >
+                                      <span className="material-symbols-outlined text-sm" style={{ color: "#904d00" }}>person</span>
+                                    </Link>
+                                  )}
+                                </div>
                                 <span className="text-xs font-medium text-slate-400 flex-shrink-0 ml-2">
                                   {c.last_message?.sent_at
                                     ? new Date(c.last_message.sent_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })

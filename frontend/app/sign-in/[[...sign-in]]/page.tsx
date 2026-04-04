@@ -1,56 +1,62 @@
 import { SignIn } from "@clerk/nextjs";
 
-const FEATURES = [
-  "Qualification automatique des leads par IA",
-  "Réponses instantanées 24h/24 par email et SMS",
-  "Rapports de qualification envoyés automatiquement",
-  "Tableau de bord métier pour artisans",
-];
-
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex flex-col justify-between w-[440px] flex-shrink-0 p-12"
-        style={{ background: "linear-gradient(160deg, #2e1a00 0%, #191c1d 100%)" }}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      style={{
+        fontFamily: "'Inter', system-ui, sans-serif",
+        background:
+          "radial-gradient(ellipse at 50% -10%, rgba(144,77,0,0.10) 0%, #f8f9fa 55%)",
+      }}
+    >
+      {/* Subtle warm texture */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 80% 80%, rgba(255,140,0,0.05) 0%, transparent 60%)",
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-[420px] mx-4 flex flex-col gap-6">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)" }}>
-            <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>robot</span>
+        <div className="flex flex-col items-center">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 shadow-md"
+            style={{
+              background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)",
+            }}
+          >
+            <span
+              className="material-symbols-outlined text-white text-xl"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              handyman
+            </span>
           </div>
-          <span className="font-headline font-black text-xl text-white tracking-tight">ArtiBot</span>
-        </div>
-
-        {/* Middle content */}
-        <div>
-          <p className="font-headline font-extrabold text-3xl text-white leading-tight tracking-tight mb-6">
-            Votre assistant IA pour ne rater aucun prospect
+          <span
+            className="font-headline font-black text-xl tracking-tight"
+            style={{ color: "#191c1d" }}
+          >
+            ArtiBot
+          </span>
+          <p className="text-xs mt-1" style={{ color: "#897362" }}>
+            Le compagnon digital de l&apos;artisan moderne.
           </p>
-          <div className="space-y-3">
-            {FEATURES.map((f) => (
-              <div key={f} className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-base flex-shrink-0 mt-0.5" style={{ color: "#ff8c00", fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                <span className="text-sm" style={{ color: "#ddc1ae", lineHeight: 1.5 }}>{f}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
-        <p className="text-xs" style={{ color: "#564334" }}>© 2025 ArtiBot — Fait pour les artisans français</p>
-      </div>
-
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-8" style={{ background: "#f3f4f5" }}>
-        <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex items-center justify-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #904d00 0%, #ff8c00 100%)" }}>
-              <span className="material-symbols-outlined text-white text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>robot</span>
-            </div>
-            <span className="font-headline font-black text-lg" style={{ color: "#191c1d" }}>ArtiBot</span>
-          </div>
+        {/* Card */}
+        <div
+          className="rounded-3xl px-8 py-8 shadow-sm"
+          style={{ background: "#ffffff" }}
+        >
+          <h1
+            className="text-xl font-extrabold font-headline text-center mb-6"
+            style={{ color: "#191c1d" }}
+          >
+            Heureux de vous revoir
+          </h1>
 
           <SignIn
             appearance={{
@@ -67,16 +73,39 @@ export default function SignInPage() {
               elements: {
                 rootBox: "w-full",
                 card: "shadow-none border-0 p-0 bg-transparent",
-                headerTitle: "font-bold text-xl font-headline",
-                headerSubtitle: "text-sm",
-                socialButtonsBlockButton: "border border-surface-container-high hover:bg-surface-container-low text-sm font-medium rounded-xl",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                socialButtonsBlockButton:
+                  "border border-[#e7e8e9] hover:bg-[#f3f4f5] text-sm font-medium rounded-xl",
                 formButtonPrimary: "text-sm font-semibold rounded-xl",
                 formFieldInput: "rounded-xl text-sm",
                 footerActionLink: "font-semibold",
-                dividerLine: "bg-surface-container-high",
+                dividerLine: "bg-[#f3f4f5]",
               },
             }}
           />
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-1 text-xs">
+          <div className="flex gap-4" style={{ color: "#c4c5c6" }}>
+            <a href="#" className="hover:text-slate-500 transition-colors">
+              Confidentialité
+            </a>
+            <a href="#" className="hover:text-slate-500 transition-colors">
+              Aide
+            </a>
+          </div>
+          <div
+            className="flex items-center gap-1.5 font-semibold text-xs"
+            style={{ color: "#564334" }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full inline-block"
+              style={{ background: "#22c55e" }}
+            />
+            ArtiBot Actif
+          </div>
         </div>
       </div>
     </div>
