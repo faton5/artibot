@@ -19,8 +19,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       dynamic
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      afterSignInUrl="/dashboard"
-      afterSignUpUrl="/onboarding"
+      fallbackRedirectUrl="/dashboard"
+      signUpForceRedirectUrl="/onboarding"
     >
       <html lang="fr" className="light">
         <head>
