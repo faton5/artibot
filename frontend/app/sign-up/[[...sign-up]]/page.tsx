@@ -94,16 +94,33 @@ export default function SignUpPage() {
                 fontFamily: "'Inter', system-ui, sans-serif",
               },
               elements: {
-                rootBox: "w-full",
-                card: "shadow-none border-0 p-0 bg-transparent",
-                headerTitle: "hidden",
-                headerSubtitle: "hidden",
-                socialButtonsBlockButton:
-                  "border border-[#e7e8e9] hover:bg-[#f3f4f5] text-sm font-medium rounded-xl",
-                formButtonPrimary: "text-sm font-semibold rounded-xl",
-                formFieldInput: "rounded-xl text-sm",
-                footerActionLink: "font-semibold",
-                dividerLine: "bg-[#f3f4f5]",
+                rootBox: { width: "100%" },
+                card: {
+                  boxShadow: "none",
+                  border: "none",
+                  padding: "0",
+                  background: "transparent",
+                  width: "100%",
+                  maxWidth: "100%",
+                },
+                header: { display: "none" },
+                socialButtonsBlockButton: {
+                  border: "1px solid #e7e8e9",
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                },
+                formButtonPrimary: {
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                },
+                formFieldInput: {
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                },
+                footerActionLink: { fontWeight: "600" },
+                dividerLine: { background: "#f3f4f5" },
               },
             }}
           />
