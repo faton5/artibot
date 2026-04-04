@@ -31,7 +31,7 @@ class KnowledgeChunk(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     artisan_id = Column(UUID(as_uuid=True), ForeignKey("artisans.id"), nullable=False)
     content = Column(Text, nullable=False)
-    embedding = Column(Vector(1536), nullable=True)
+    embedding = Column(Vector(1024), nullable=True)
     source_file = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

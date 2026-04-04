@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
-EMBEDDING_DIM = 1536
+EMBEDDING_DIM = 1024
 
 
 def _get_embedding_client():
